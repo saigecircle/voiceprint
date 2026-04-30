@@ -1,5 +1,5 @@
 {
-  "name": "saigecircle-skills",
+  "name": "voiceprint",
   "owner": {
     "name": "Saige Circle",
     "url": "https://saigecircle.com"
@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "voiceprint",
-      "source": "./plugins/voiceprint",
+      "source": ".",
       "description": "A self-improving writing-voice skill that strips AI tells by default and learns your actual voice over time."
     }
   ]
