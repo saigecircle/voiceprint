@@ -53,3 +53,12 @@ If `~/.voiceprint/` does not exist:
 2. Copy `references/profile-template.md` (in the plugin folder) to `~/.voiceprint/profile.md`. Fill the `created:` frontmatter date with today's date.
 3. Create empty `~/.voiceprint/pending-lessons.md` and `~/.voiceprint/rejected-lessons.md`.
 4. Proceed with the draft. After returning it, emit the one-time setup nudge from Section 2 step 6.
+
+## Pending-lessons nudge
+
+After returning a draft, check `~/.voiceprint/pending-lessons.md` line count. If ≥ 3 AND greater than the value in `~/.voiceprint/.last-nudge-count` (or that file doesn't exist):
+
+1. Append to your response: *"Voiceprint has noticed N things about your voice. Run /voiceprint review when you're ready."*
+2. Write the current count to `~/.voiceprint/.last-nudge-count`.
+
+Never nudge more than once per threshold crossing.
