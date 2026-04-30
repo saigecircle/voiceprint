@@ -1,0 +1,17 @@
+{
+  "name": "voiceprint",
+  "version": "0.1.0",
+  "description": "Self-improving writing-voice skill — humanizer-first defaults, learns your voice over time.",
+  "author": {
+    "name": "Saige Circle",
+    "url": "https://saigecircle.com"
+  },
+  "license": "MIT",
+  "hooks": {
+    "Stop": [
+      {
+        "command": "${CLAUDE_PLUGIN_ROOT}/hooks/stop-capture.sh"
+      }
+    ]
+  }
+}
