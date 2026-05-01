@@ -356,6 +356,50 @@ When a glaring contradiction is detected, voiceprint **writes both entries** (de
 - **Sample files (Path A only) are NOT deduped** — each run saves new sample files with new `<n>` suffixes. Sample files are a record of what the user supplied, not a deduplicated set.
 - **Additive across paths:** a user can run Path A first, Path B later (or any combination). Populator merges into the same destinations. Order doesn't matter.
 
+## Transparency summary
+
+After the populator writes, voiceprint shows a short summary of what landed where. Not an approval prompt — purely informational.
+
+```
+Done. Here's what I added:
+
+voice-profile.md (+8 entries)
+  - Borrowed authority
+  - Specificity as signal
+  - Land the point and stop
+  - Hedges over absolutes
+  - ...
+
+registers/social-posts.md (+3 entries)
+registers/newsletter.md (+2 entries)
+
+samples/ (+5 files)
+  - 2026-05-01-1.md (social-posts)
+  - 2026-05-01-2.md (newsletter)
+  - ...
+
+Edit any file by hand if anything looks off.
+```
+
+For each entry voiceprint adds, the summary lists a one-line label (the rule's headline). Full content lives in the file — the summary is for the user to scan and spot anything they want to change.
+
+If a re-run produces no new writes:
+
+```
+Already in sync. No new entries to add.
+```
+
+If the populator detected glaring contradictions, append a one-line note per contradiction inside the summary:
+
+```
+Note: I noticed a possible contradiction between the new
+"Open with a rhetorical question" and the existing "Never open
+with a question." I've kept both — voice is contextual. Tell me
+if you'd like me to drop one.
+```
+
+**The summary is a checkpoint, not a wall.** After voiceprint shows it, the user can challenge any entry, ask why a pattern landed where it did, request rewording, move a pattern to a different destination, or remove it altogether. Voiceprint edits files in real-time as the conversation goes. Same model end-to-end across setup and review — co-creation, not fire-and-forget.
+
 ## Approval logging (per-turn rule)
 
 When the user signals approval of a draft voiceprint generated, append a structured entry to `<voiceprint_home>/lessons.md`. Capture time stores enough raw material that a review weeks later still makes sense, the original conversation will be long gone by then.
