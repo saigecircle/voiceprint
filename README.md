@@ -2,11 +2,13 @@
 
 A self-improving writing-voice skill for Claude Code (Mac, Linux, Windows), from [Saige Circle](https://saigecircle.com). Strips AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth) by default. Learns your actual voice over time as you approve outputs.
 
-## What's new in alpha 0.7.0
+## What's new in alpha 0.7.1
 
 - **Onboarding flow.** Voiceprint now asks at first activation whether you want to seed your voice profile from an existing voice doc or 3–5 writing samples. Day-one drafts sound like you instead of starting from a generic baseline.
-- **Intelligent populator.** Setup and review now write proposed patterns directly, then show a short transparency summary. No more per-item approval gates — you co-create after the summary if anything's off.
-- **Pattern-level review.** Reviews are now a reflection session: voiceprint shows the patterns it's noticed, you discuss, refine, then voiceprint writes once you confirm. Replaces the v0.6.0 per-entry approve/reject/skip loop.
+- **Voice profile populates across four sections.** Setup and review distribute across *Voice in a sentence* (the north-star line), *Cross-register notes*, *Things to avoid* (your specific bans on top of the humanizer floor), and *Voice anchors* (your characteristic phrases). Earlier alpha builds only populated cross-register rules.
+- **Intelligent populator.** Setup writes proposed entries directly, then shows a short transparency summary. Co-create after the summary if anything's off.
+- **Pattern-level review.** Reviews now ask *"embed the learnings?"* and on yes show the patterns voiceprint noticed in plain English with a concrete example each, then offer Update / Ignore all / Other (refine). Replaces the v0.6.0 per-entry approve/reject/skip loop.
+- **Empty-lessons review handler.** When lessons.md is empty (or just cleared), voiceprint tells you you're current with a warm one-liner instead of forcing a menu through.
 - **`profile.md` is now `voice-profile.md`.** Templates renamed accordingly.
 - **Cross-harness compatibility maintained.** All prompts are plain-text MCQs — Claude Code, Codex, Copilot CLI, Gemini CLI all work the same way.
 
@@ -56,7 +58,7 @@ It's all plain markdown. Read it, edit it, sync it.
 - **Generate from scratch:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
 - **Polish what you wrote:** paste your own draft and say *"voiceprint this"*, *"polish this client email"*, *"tighten this Slack message"*, *"finesse this"*, or *"make this sound more like me"*. Voiceprint runs your text through the humanizer floor, your voice profile, and the matching register, preserving the parts that already sound like you.
 - **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
-- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to reflect on what it's noticed. Say yes, voiceprint shows you the patterns it's seeing across recent drafts, you discuss and refine, voiceprint writes once you confirm. Approved patterns sharpen your voice from that point on. You can change the review cadence any time, *"make it 3"*, *"every 10 instead"*, or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
+- **Review:** after every 5 approved drafts, voiceprint asks *"embed the learnings into your voice profile?"* Say yes, and voiceprint shows the patterns it's seeing in plain English with a concrete example each, then asks what to do: **Update** (write them), **Ignore all** (clear and reset), or **Other** (refine, drop, move). Approved patterns sharpen your voice from that point on. You can change the review cadence any time, *"make it 3"*, *"every 10 instead"*, or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
 
 ## Want a `/voiceprint` shortcut?
 

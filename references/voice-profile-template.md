@@ -1,5 +1,5 @@
 ---
-voiceprint_version: alpha 0.7.0
+voiceprint_version: alpha 0.7.1
 review_threshold: 5
 setup_complete: false
 setup_method:
@@ -14,13 +14,17 @@ The humanizer floor (em-dash removal, banned vocabulary, generic-warmth fixes) i
 
 Voiceprint adds to the sections below at setup time and during reviews, with your input. You're welcome to edit anything by hand. It's your file.
 
+## Voice in a sentence
+
+A short north-star line that captures how you sound at your best. Voiceprint distils this from your voice doc or samples at setup, and refines it during reviews when a clearer summary emerges. One or two sentences max — this is the orientation line, not the full picture.
+
 ## Cross-register notes
 
 Voice rules that apply across every register. Setup-imported and review-approved patterns destined for "core profile" land here.
 
 ## Things to avoid
 
-Words, phrases, or moves that don't sound like you, regardless of register.
+Words, phrases, or moves that don't sound like you, regardless of register. *Your* specific bans, on top of the humanizer floor.
 
 ## Voice anchors
 
