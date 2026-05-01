@@ -1,61 +1,81 @@
 # voiceprint
 
-A self-improving writing-voice skill for Claude Code, from [Saige Circle](https://saigecircle.com). Strips AI tells (em dashes, "It's not just X, it's Y", banned vocabulary) by default. Learns your actual voice over time as you approve outputs.
+A self-improving writing-voice skill for Claude Code (Mac, Linux, Windows), from [Saige Circle](https://saigecircle.com). Strips AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth) by default. Learns your actual voice over time as you approve outputs.
+
+## Why voiceprint exists
+
+LLM output has a recognisable AI voice. Most non-technical users can feel it but don't know how to fix it beyond pasting "write in my voice" into a prompt. Voiceprint fills that gap: a single skill install that strips AI tells from every draft and quietly learns your real voice over time, with your approval. No telemetry, no network calls, all local markdown.
 
 ## Install
 
-Paste these two lines into Claude Code:
+Two paths. Pick whichever feels easier.
 
-    /plugin marketplace add saigecircle/voiceprint
-    /plugin install voiceprint@voiceprint
+### Option A — paste-and-tell (recommended)
 
-That's it. The skill auto-activates when you ask Claude to write something.
+Paste this into Claude Code:
 
-## How it works
+    https://github.com/saigecircle/voiceprint
 
-- **Day one:** ask Claude to draft a LinkedIn post, an email, a blog intro — voiceprint applies humanizer rules silently. Output already feels less AI-ish.
-- **Setup (optional):** run `/voiceprint setup` for two questions — paste a few samples, name the kinds of writing you do. Each is independently skippable.
-- **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes what was good.
-- **Review:** when 3 lessons pile up, voiceprint nudges you. Run `/voiceprint review`. Approve, reject, edit, or skip each. Approved lessons land in your profile.
+    Add this skill to my system.
+
+Claude fetches the skill into `~/.claude/skills/voiceprint/`. That's it. The skill auto-activates the next time you ask Claude to write something.
+
+### Option B — CLI
+
+    claude skill add --url https://raw.githubusercontent.com/saigecircle/voiceprint/main/SKILL.md
+
+For users who prefer the command line.
 
 ## Where your voice lives
 
-`~/.voiceprint/` — outside the plugin folder, so plugin updates never touch it.
+`~/Documents/Voiceprint/` by default. You can move it anywhere — your Obsidian vault, Dropbox, iCloud — by telling voiceprint where to put it. Voiceprint moves the folder and remembers the new location automatically.
 
 ```
-~/.voiceprint/
-├── profile.md             ← your core voice
-├── registers/             ← per-context tweaks (social, email, blog, etc.)
-├── samples/               ← raw writing samples you pasted during setup
-├── pending-lessons.md     ← lessons captured but not yet reviewed
-└── rejected-lessons.md    ← patterns you've explicitly rejected
+~/Documents/Voiceprint/
+├── profile.md     ← your core voice (cross-register rules)
+├── lessons.md     ← rolling capture log of approved drafts
+├── samples/       ← raw writing samples from setup
+└── registers/     ← per-context voice notes (social, email, blog, etc.)
 ```
 
-It's all plain markdown. Read it, edit it, sync it to Dropbox/iCloud, share it with another machine.
+It's all plain markdown. Read it, edit it, sync it.
 
-## Slash commands
+**Backup.** Sync the folder somewhere (Dropbox, iCloud, Syncthing, git). Voiceprint does not write `.backup.md` files; sync is your backup story.
 
-| Command | What it does |
-|---|---|
-| `/voiceprint setup` | Two-question setup — paste samples + name what you mainly write |
-| `/voiceprint review` | Walk pending lessons, approve / reject / edit / skip each |
+## How it works
 
-Other things you might want, done with shell:
+- **Day one:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
+- **Setup (optional):** say *"voiceprint setup"* for two questions — paste a few samples, name the kinds of writing you do. Each is independently skippable.
+- **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
+- **Review:** when 5 lessons pile up, voiceprint nudges you. Say *yes*. Walk the queue. Approve, reject, edit, or skip each. Approved patterns land in your profile.
 
-- See your profile: `cat ~/.voiceprint/profile.md`
-- Back up: copy or sync `~/.voiceprint/`
-- Reset to defaults: `rm -rf ~/.voiceprint/` (next draft recreates it)
-- Share: zip `~/.voiceprint/` and send
+You can change the review cadence any time — *"make it 3"*, *"every 10 instead"*, or *"manual only"* — by just telling voiceprint.
+
+## Want a `/voiceprint` shortcut?
+
+Voiceprint does not ship a slash command. If you want one, tell Claude:
+
+> Create a `/voiceprint` slash command at `~/.claude/commands/voiceprint.md` that activates the voiceprint skill and passes through `$ARGUMENTS`.
+
+Claude generates the file. You own the command.
+
+## Updates
+
+To update: paste this URL and say *"update voiceprint to latest"*
+
+    https://github.com/saigecircle/voiceprint
+
+Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the skill files wholesale. Your data folder (`~/Documents/Voiceprint/`) is completely separate and never touched. Skill updates always reach you with no migration step.
 
 ## What it does NOT do
 
 - Doesn't send any data anywhere. Everything is local.
-- Doesn't activate on code, summarisation, or editing existing text.
+- Doesn't activate on code, or on edits/proofreads of text you wrote (your voice is already in it).
 - Doesn't try to replace your voice — it learns *with* you, not without you.
 
-## Philosophy
+## Out of scope (v0.3)
 
-We believe the most valuable thing about a piece of writing is that a real human wrote it, in their own voice, from their own experience. Voiceprint helps you keep your voice when you use AI as a draft partner — instead of flattening into AI-default.
+Cowork support, mobile, and API paste-in flows are deferred to v0.4. v0.3 is Claude Code only (Mac, Linux, Windows).
 
 ## License
 
