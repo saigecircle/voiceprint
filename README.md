@@ -73,10 +73,6 @@ Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the sk
 - Doesn't activate on code, or on edits/proofreads of text you wrote (your voice is already in it).
 - Doesn't try to replace your voice — it learns *with* you, not without you.
 
-## Out of scope (v0.3)
-
-Cowork support, mobile, and API paste-in flows are deferred to v0.4. v0.3 is Claude Code only (Mac, Linux, Windows).
-
 ## License
 
 MIT. Built by [Saige Circle](https://saigecircle.com). Humanizer rules derived from the public-domain [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) guide.
