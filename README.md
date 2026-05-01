@@ -47,9 +47,7 @@ It's all plain markdown. Read it, edit it, sync it.
 - **Setup (optional):** say *"voiceprint setup"* for two questions — paste a few samples, name the kinds of writing you do. Each is independently skippable.
 - **Day one:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
 - **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
-- **Review:** when 5 patterns pile up, voiceprint nudges you. Say *yes*. Walk the queue. Approve, reject, edit, or skip each. Approved patterns land in your profile.
-
-You can change the review cadence any time — *"make it 3"*, *"every 10 instead"*, or *"manual only"* — by just telling voiceprint.
+- **Review:** when 5 patterns pile up, voiceprint nudges you. Say *yes*. Walk the queue. Approve, reject, edit, or skip each. Approved patterns land in your profile. You can change the cadence any time — *"make it 3"*, *"every 10 instead"*, or *"manual only"*. In manual mode voiceprint stays quiet and you kick off reviews yourself by saying *"voiceprint review"*.
 
 ## Want a `/voiceprint` shortcut?
 
@@ -61,9 +59,11 @@ Claude generates the file. You own the command.
 
 ## Updates
 
-To update: paste this URL and say *"update voiceprint to latest"*
+Paste this into Claude Code:
 
     https://github.com/saigecircle/voiceprint
+
+    Update voiceprint to latest.
 
 Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the skill files wholesale. Your data folder (`~/Documents/Voiceprint/`) is completely separate and never touched. Skill updates always reach you with no migration step.
 
