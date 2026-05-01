@@ -1,5 +1,5 @@
 ---
-voiceprint_version: 0.4.0
+voiceprint_version: 0.5.0
 review_threshold: 5
 auto_prompt_intro_shown: false
 ---

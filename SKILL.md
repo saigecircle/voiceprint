@@ -29,6 +29,22 @@ Also stay out for any specific request where the user signals they want raw outp
 
 **Tie-break:** when in doubt, activate. False-positive cost is low (the user gets voice on output they would write that way anyway, or asks for raw and gets it). False-negative cost is real (AI tells leak through, the user redoes the work).
 
+## Three input modes
+
+Once activated, voiceprint runs on every external-audience response, regardless of how the input arrived. The user gives one of three things:
+
+1. **No draft — generate from scratch.** "Write me a LinkedIn post about X." "Draft me an email to this client." "Hook for the new ad." Voiceprint generates the first version through the three layers.
+2. **Their draft — polish, tighten, or finesse.** "Voiceprint this." "Polish this." "Tighten this." "Make this sound like me." "Voiceprint finesse this." The user's text is the baseline; voiceprint rewrites it through the three layers, preserving what already sounds like them.
+3. **Their draft — use as sample or anchor.** "Here's my version." "This is roughly what I want." "Use this as a starting point." Treat the supplied text as a reference for the rewrite or the next generated version, not as text to ship as-is.
+
+In every mode, the response order is fixed:
+
+1. **Load the three layers first.** Read `references/humanizer.md`, `<voiceprint_home>/profile.md`, and the matching register file (per *Register decoder* below). Do not skip because the text is short, casual, or looks internal — explicit invocation overrides the private/internal carve-out.
+2. **Run the content through them.** Strip humanizer-banned shapes, apply user-additions from `profile.md`, apply register notes.
+3. **Then write the response.** Show the result (or two to three labelled options if the brief is open) and briefly name which layers you loaded, so the user can see voice was actually applied rather than the model writing from memory.
+
+If a layer file is missing or unreadable, surface that before responding — never silently skip a layer.
+
 ## Path resolution
 
 Voiceprint stores user data in a folder it owns. The folder location is recorded in a single tiny pointer file at `~/.claude/voiceprint/voiceprint_home.txt`, which lives **adjacent to** the skill folder, not inside it. There are no environment variables; the pointer file is the only source of truth.
