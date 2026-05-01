@@ -171,23 +171,52 @@ Set up your voice profile?
 
 ## Setup flow
 
-Triggered when the user says "voiceprint setup" or anything Claude reads as that intent ("set up voiceprint", "configure voiceprint", "let's get voiceprint going"). Two questions, asked one at a time. Each is independently skippable.
+Triggered when the user says "voiceprint setup" or anything voiceprint reads as that intent ("set up voiceprint", "configure voiceprint", "let's get voiceprint going"). Same flow runs from the auto-prompt's `[1]` branch (see *Permission question* above).
 
-**Question 1** (verbatim, the user-facing text is fixed):
+After the path question (see *Permission question* above) the flow forks into Path B (voice doc) or Path A (samples). Both end with the **intelligent populator + transparency summary** described later in this doc.
 
-> Paste 3 to 5 short pieces of your writing, anything you've actually published or sent. Or type **skip**.
+### Path B — voice doc intake
 
-Each pasted sample is saved to `<voiceprint_home>/samples/sample-N.md` (auto-incrementing N starting from the next unused number, never overwrite an existing file).
+1. Ask where the doc is:
 
-**Question 2** (verbatim, the user-facing text is fixed):
+   ```
+   Where's your voice doc?
+     [1] Paste it here
+     [2] One file — give me the path
+     [3] Entire folder — give me the path (I'll treat all files as voice-doc material)
+     [4] Other — specify
+   ```
 
-> What do you mainly write? (e.g. LinkedIn posts, client emails, blog drafts), or type **skip**.
+2. **If `[3]` (folder)**, list the `.md`/`.txt` files voiceprint sees inside (no recursion) and confirm before proceeding:
 
-Each kind named is run through the register decoder (Step 1 first, Step 2 fallback) to produce a canonical filename. For each filename that does not already exist, copy `references/register-template.md` to `<voiceprint_home>/registers/<filename>` so future lessons have somewhere to land. Existing register files are left alone.
+   ```
+   I see N files in <folder>:
+     - file1.md
+     - file2.md
+     ...
 
-After the files are created, name them back to the user in one short line, including which inputs map to each file when the decoder collapsed several inputs into one register. Example: if the user said "LinkedIn posts, Twitter posts, and client emails", reply with something like "Created `social-posts.md` (covers LinkedIn and Twitter) and `client-comms.md` (for client emails)." This stops the user from wondering where their Twitter file went. Phrasing is voiceprint's call.
+   Treat all as one merged voice-doc corpus?
+     [1] Yes — proceed
+     [2] Skip some — tell me which to exclude
+     [3] Other — specify
+   ```
 
-Setup is **idempotent**. Re-running it adds samples (continuing the N counter) and adds registers (only creating files that do not already exist). Nothing is wiped, nothing is overwritten.
+3. **Show the doc preview.**
+   - Single file or pasted text: H1 if present, else filename (or "Pasted text" for pastes), else "Untitled voice doc"; followed by total line count and the first ~5 non-empty lines.
+   - Folder: list each file's title (same H1/filename rule per-file), one line each, plus combined total line count. No first-5-lines wall when multi-file.
+
+4. **Run the voice doc analyser.** Distill the content into:
+   - Cross-register notes → `voice-profile.md`
+   - Register-specific notes → `registers/<name>.md` (filename resolved via the *Register decoder* in this doc)
+   - The doc itself is **not** saved as a sample.
+
+   For folder input, the analyser treats the combined files as one corpus. One run, one set of distilled outputs.
+
+5. **Output cap:** 5–10 high-signal additions total across all destinations. Quality over volume. Distill, never bulk-copy.
+
+6. Hand off to the **intelligent populator** (later in this doc).
+
+7. Frontmatter updated to `setup_complete: true, setup_method: voice-doc, last_setup_run: <today>`.
 
 ## Approval logging (per-turn rule)
 
