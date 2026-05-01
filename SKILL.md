@@ -1,27 +1,29 @@
 ---
 name: voiceprint
-description: Apply the user's writing voice to any output destined for an external audience (clients, followers, readers, anyone outside the user themselves), including polishing or tightening a draft the user pasted. Also triggers on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code or private internal notes.
+description: Apply the user's writing voice to any output destined for another human reader — external audiences (clients, followers, readers) or internal ones (teammates, collaborators) — including polishing or tightening a draft the user pasted. Also triggers on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code or notes the user is writing only for themselves.
 ---
 
 # voiceprint
 
-Voiceprint applies the user's writing voice to any output intended for an external audience. It strips AI tells by default and learns the user's actual voice over time, with their approval. Pure markdown plus Claude's built-in file tools — no plugin runtime, no hooks, no shell scripts, no network calls.
+Voiceprint applies the user's writing voice to any output intended for another human reader. It strips AI tells by default and learns the user's actual voice over time, with their approval. Pure markdown plus Claude's built-in file tools — no plugin runtime, no hooks, no shell scripts, no network calls.
 
 ## When to activate
 
-Activate whenever the output is intended for an external audience — clients, prospects, followers, readers, or anyone outside the user themselves. This includes social posts, emails, newsletters, blog articles, ad copy, bios, announcements, proposals, pitches, and any other text the user will put in front of another person.
+Activate whenever the output is intended for another human reader — external (clients, prospects, followers, readers) or internal (teammates, collaborators, anyone the user is messaging or writing for besides themselves). This includes social posts, emails, newsletters, blog articles, ad copy, bios, announcements, proposals, pitches, Slack messages, internal memos, project notes shared with the team, and any other text another person will read.
+
+The line is **audience, not channel.** Internal does not mean private. A note dropped into a shared team channel still has an audience and still deserves the user's voice. The only true exclusion is text no one but the user will ever read.
 
 Concrete triggering paths:
 
-- **Public-facing output (default):** any draft, copy, or message destined for clients or an audience — regardless of whether a writing-task verb was used. The question is not "did they ask me to write something?" but "will someone outside the user read this?" If yes, voiceprint runs.
+- **Audience-facing output (default):** any draft, copy, or message destined for another human reader — regardless of whether a writing-task verb was used. The question is not "did they ask me to write something?" but "will another person read this?" If yes, voiceprint runs.
 - **Explicit (skill name as keyword):** any prompt mentioning "voiceprint" — "voiceprint this Substack draft", "set up voiceprint", "voiceprint review", "move voiceprint to …".
 
 Do NOT activate when:
 
 1. **The output is code.** Refactoring, debugging, generating functions, writing tests, technical commentary on a codebase. Voice is irrelevant to code.
-2. **The output is private and internal.** Notes to self, internal planning docs, personal journal entries — anything the user is not putting in front of another person.
+2. **The output is for the user only.** Notes to self, personal journal entries, scratchpads, private planning docs the user is using as their own thinking surface. The test: will anyone other than the user read this? If no, skip voiceprint.
 
-Edits and proofreads of user-supplied text **do** activate voiceprint when the text is destined for an external audience (tightening a LinkedIn draft, polishing a client email, fixing typos in a newsletter). Voiceprint applies the humanizer floor and the voice profile to whatever the model touches, while preserving the user's existing prose where it already sounds like them. The user's pasted draft becomes the baseline for *First draft tracking* below — any edits voiceprint makes are the diff captured at approval time.
+Edits and proofreads of user-supplied text **do** activate voiceprint when the text has any audience (tightening a LinkedIn draft, polishing a client email, fixing a Slack message to the team, cleaning up a memo for collaborators). Voiceprint applies the humanizer floor and the voice profile to whatever the model touches, while preserving the user's existing prose where it already sounds like them. The user's pasted draft becomes the baseline for *First draft tracking* below — any edits voiceprint makes are the diff captured at approval time.
 
 Also stay out for any specific request where the user signals they want raw output. Seeded examples: "neutral summary", "just the facts", "no voice", "raw", "plain", "no styling". Judge intent — if the user asks for an objective summary or a bulleted brief with no voice, deliver that.
 
@@ -33,7 +35,7 @@ Also stay out for any specific request where the user signals they want raw outp
 
 Once voiceprint is activated — whether the user is asking for a fresh draft or handing over their own text to polish — the response order is fixed:
 
-1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context — see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks internal: **explicit invocation of voiceprint overrides the private/internal carve-out** in *When to activate*.
+1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context — see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
 2. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
 3. **Then write the response.** Briefly name which layers were loaded (or already in context), so the user can see voice was actually applied rather than the model writing from memory.
 
