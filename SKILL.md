@@ -555,6 +555,24 @@ The summary is a checkpoint, not a wall. Same as setup — after the summary, th
 
 **End-of-review reminder:** tell the user to open a new session for the new patterns to take effect (in-context copies are stale until reload).
 
+## Reset
+
+Triggered by "voiceprint reset", "start voice profile over", or any phrase voiceprint reads as that intent. The only destructive path; never the default.
+
+Confirmation required:
+
+```
+Reset voice profile? This archives the current file and starts blank.
+
+  [1] Yes — archive and reset
+  [2] No — cancel
+  [3] Other — specify
+```
+
+If `[1]`: rename `voice-profile.md` to `voice-profile.md.bak-YYYY-MM-DD` (using whatever rename primitive the harness exposes — Bash `mv`, write+delete pair, or equivalent), then write a fresh template with `setup_complete: false`. Next voiceprint activation will re-trigger the permission question.
+
+`registers/`, `samples/`, and `lessons.md` are **not** touched by reset — only `voice-profile.md` is archived. The user can manually clear those folders if they want a deeper reset.
+
 ## Capture reliability and failure mode
 
 The capture-logging instruction is probabilistic, Claude must remember the rule across turns. In practice it is reliable, because the same auto-memory mechanism that runs CLAUDE.md instructions runs this one.
