@@ -2,6 +2,14 @@
 
 A self-improving writing-voice skill for Claude Code (Mac, Linux, Windows), from [Saige Circle](https://saigecircle.com). Strips AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth) by default. Learns your actual voice over time as you approve outputs.
 
+## What's new in alpha 0.7.0
+
+- **Onboarding flow.** Voiceprint now asks at first activation whether you want to seed your voice profile from an existing voice doc or 3–5 writing samples. Day-one drafts sound like you instead of starting from a generic baseline.
+- **Intelligent populator.** Setup and review now write proposed patterns directly, then show a short transparency summary. No more per-item approval gates — you co-create after the summary if anything's off.
+- **Pattern-level review.** Reviews are now a reflection session: voiceprint shows the patterns it's noticed, you discuss, refine, then voiceprint writes once you confirm. Replaces the v0.6.0 per-entry approve/reject/skip loop.
+- **`profile.md` is now `voice-profile.md`.** Templates renamed accordingly.
+- **Cross-harness compatibility maintained.** All prompts are plain-text MCQs — Claude Code, Codex, Copilot CLI, Gemini CLI all work the same way.
+
 ## Why voiceprint exists
 
 LLM output has a recognisable AI voice. Most non-technical users can feel it but don't know how to fix it beyond pasting "write in my voice" into a prompt. Voiceprint fills that gap: a single skill install that strips AI tells from every draft and quietly learns your real voice over time, with your approval. No telemetry, no network calls, all local markdown.
@@ -32,7 +40,7 @@ For users who prefer the command line.
 
 ```
 ~/Documents/Voiceprint/
-├── profile.md     ← your core voice (cross-register rules)
+├── voice-profile.md ← your core voice (cross-register rules)
 ├── lessons.md     ← rolling capture log of approved drafts
 ├── samples/       ← raw writing samples from setup
 └── registers/     ← per-context voice notes (social, email, blog, etc.)
@@ -44,11 +52,11 @@ It's all plain markdown. Read it, edit it, sync it.
 
 ## How it works
 
-- **Setup (optional):** say *"voiceprint setup"* for two questions, paste a few samples, name the kinds of writing you do. Each is independently skippable.
+- **Setup (optional but recommended):** say *"voiceprint setup"* — voiceprint asks whether to import an existing voice doc or take 3–5 writing samples, then seeds your profile so day-one drafts sound like you. The flow is also offered automatically on first activation.
 - **Generate from scratch:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
 - **Polish what you wrote:** paste your own draft and say *"voiceprint this"*, *"polish this client email"*, *"tighten this Slack message"*, *"finesse this"*, or *"make this sound more like me"*. Voiceprint runs your text through the humanizer floor, your voice profile, and the matching register, preserving the parts that already sound like you.
 - **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
-- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to look at what it's noticed. Say yes, walk the queue, choose what to keep. Approved patterns sharpen your voice for everything you write from that point on. You can change the review cadence any time, *"make it 3"*, *"every 10 instead"*, or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
+- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to reflect on what it's noticed. Say yes, voiceprint shows you the patterns it's seeing across recent drafts, you discuss and refine, voiceprint writes once you confirm. Approved patterns sharpen your voice from that point on. You can change the review cadence any time, *"make it 3"*, *"every 10 instead"*, or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
 
 ## Want a `/voiceprint` shortcut?
 
