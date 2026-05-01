@@ -402,6 +402,8 @@ if you'd like me to drop one.
 
 ## Approval logging (per-turn rule)
 
+**Schema note (alpha 0.7.0):** the lessons capture format is unchanged from v0.6.0. Each entry retains the fields *Timestamp*, *Register*, *You asked*, *Final approved version*, *Changes you made*. The new pattern-level review flow reads these fields without modification.
+
 When the user signals approval of a draft voiceprint generated, append a structured entry to `<voiceprint_home>/lessons.md`. Capture time stores enough raw material that a review weeks later still makes sense, the original conversation will be long gone by then.
 
 **Approval signal.** Judge intent. Seeded canonical examples that count: "perfect", "that's it", "use this", "send it", "yes this is closest to my voice", "love it", "ship it". Extend probabilistically: "yeah this works", "better", "go with this one", "nailed it", "yep" all count. Things that look like approval but are not, "perfect… but make it shorter", "love it, can we tweak the close?", do NOT count. Those are revision signals; wait for approval on the next iteration.
