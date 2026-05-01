@@ -2,15 +2,7 @@
 
 A self-improving writing-voice skill for Claude Code (Mac, Linux, Windows), from [Saige Circle](https://saigecircle.com). Strips AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth) by default. Learns your actual voice over time as you approve outputs.
 
-## What's new in alpha 0.7.1
-
-- **Onboarding flow.** Voiceprint now asks at first activation whether you want to seed your voice profile from an existing voice doc or 3–5 writing samples. Day-one drafts sound like you instead of starting from a generic baseline.
-- **Voice profile populates across four sections.** Setup and review distribute across *Voice in a sentence* (the north-star line), *Cross-register notes*, *Things to avoid* (your specific bans on top of the humanizer floor), and *Voice anchors* (your characteristic phrases). Earlier alpha builds only populated cross-register rules.
-- **Intelligent populator.** Setup writes proposed entries directly, then shows a short transparency summary. Co-create after the summary if anything's off.
-- **Pattern-level review.** Reviews now ask *"embed the learnings?"* and on yes show the patterns voiceprint noticed in plain English with a concrete example each, then offer Update / Ignore all / Other (refine). Replaces the v0.6.0 per-entry approve/reject/skip loop.
-- **Empty-lessons review handler.** When lessons.md is empty (or just cleared), voiceprint tells you you're current with a warm one-liner instead of forcing a menu through.
-- **`profile.md` is now `voice-profile.md`.** Templates renamed accordingly.
-- **Cross-harness compatibility maintained.** All prompts are plain-text MCQs — Claude Code, Codex, Copilot CLI, Gemini CLI all work the same way.
+Version history lives in [CHANGELOG.md](./CHANGELOG.md).
 
 ## Why voiceprint exists
 

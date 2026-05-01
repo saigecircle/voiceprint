@@ -1,5 +1,5 @@
 ---
-voiceprint_version: alpha 0.7.1
+voiceprint_version: alpha 0.7.3
 review_threshold: 5
 setup_complete: false
 setup_method:

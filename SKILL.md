@@ -9,34 +9,32 @@ Voiceprint applies the user's writing voice to any output intended for another h
 
 ## When to activate
 
-Activate whenever the output is intended for another human reader, external (clients, prospects, followers, readers) or internal (teammates, collaborators, anyone the user is messaging or writing for besides themselves). This includes social posts, emails, newsletters, blog articles, ad copy, bios, announcements, proposals, pitches, Slack messages, internal memos, project notes shared with the team, and any other text another person will read.
+**The rule:** any text another person could read gets voice. Audience, not channel — internal doesn't mean private. A Slack note to a teammate has an audience. The only true exclusion is text no one but the user will ever read.
 
-The line is **audience, not channel.** Internal does not mean private. A note dropped into a shared team channel still has an audience and still deserves the user's voice. The only true exclusion is text no one but the user will ever read.
+| Signal | Activate? |
+|---|---|
+| Audience-facing draft, message, or copy (social, email, newsletter, blog, ad, bio, announcement, proposal, pitch, Slack, internal memo, etc.) | Yes |
+| Inline chat reply the user might copy out into another channel | Yes |
+| Edit or proofread of audience-facing text | Yes — preserve user's existing prose, apply layers to whatever the model touches |
+| Prompt mentions "voiceprint" in any phrasing ("voiceprint this", "voiceprint review", "move voiceprint to …") | Yes — explicit invocation overrides all carve-outs |
+| Code, terminal output, technical commentary on a codebase | No |
+| Notes-to-self, scratchpads, private journal, personal planning docs | No |
+| User asks for raw output ("just the facts", "no voice", "raw", "plain", "neutral summary", "no styling") | No — deliver as asked |
 
-Concrete triggering paths:
+**Pre-output check.** Verify activation against the *output* about to be written, not just the request shape. If the next thing about to leave the chat is a sentence another person could read and voiceprint has not yet been loaded this session, load it now. No drafting verb required.
 
-- **Audience-facing output (default):** any draft, copy, or message destined for another human reader, regardless of whether a writing-task verb was used. The question is not "did they ask me to write something?" but "will another person read this?" If yes, voiceprint runs.
-- **Explicit (skill name as keyword):** any prompt mentioning "voiceprint", "voiceprint this Substack draft", "set up voiceprint", "voiceprint review", "move voiceprint to …".
-
-Do NOT activate when:
-
-1. **The output is code.** Refactoring, debugging, generating functions, writing tests, technical commentary on a codebase. Voice is irrelevant to code.
-2. **The output is for the user only.** Notes to self, personal journal entries, scratchpads, private planning docs the user is using as their own thinking surface. The test: will anyone other than the user read this? If no, skip voiceprint.
-
-Edits and proofreads of user-supplied text **do** activate voiceprint when the text has any audience (tightening a LinkedIn draft, polishing a client email, fixing a Slack message to the team, cleaning up a memo for collaborators). Voiceprint applies the humanizer floor and the voice profile to whatever the model touches, while preserving the user's existing prose where it already sounds like them. The user's pasted draft becomes the baseline for *First draft tracking* below, any edits voiceprint makes are the diff captured at approval time.
-
-Also stay out for any specific request where the user signals they want raw output. Seeded examples: "neutral summary", "just the facts", "no voice", "raw", "plain", "no styling". Judge intent, if the user asks for an objective summary or a bulleted brief with no voice, deliver that.
-
-**Stacking.** Voiceprint is an enhancer, not a replacement. If another skill (brand context, copywriter framework, HTAC, etc.) is already loaded for the same request, voiceprint loads on top, it does not yield. Brand context tells you what to say; voiceprint controls how it sounds.
+**Stacking.** Voiceprint is an enhancer, not a replacement. If another skill (brand context, copywriter framework, HTAC, etc.) is loaded for the same request, voiceprint loads on top. Brand context tells you what to say; voiceprint controls how it sounds.
 
 **Tie-break:** when in doubt, activate. False-positive cost is low (the user gets voice on output they would write that way anyway, or asks for raw and gets it). False-negative cost is real (AI tells leak through, the user redoes the work).
+
+For edits and proofreads, the user's pasted draft is the baseline for *First draft tracking* (see *Approval logging* below).
 
 ## Response order when activated
 
 Once voiceprint is activated, whether the user is asking for a fresh draft or handing over their own text to polish, the response order is fixed:
 
 1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/voice-profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context, see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
-2. **Onboarding gate (alpha 0.7.1).** Immediately after loading `voice-profile.md` for the first time in a session, check its frontmatter. If `setup_complete: false`, the permission question (see *Permission question* below) is the **entire response for this turn**. Stop the response order here: do not draft, polish, or apply layers. Wait for the user's next turn. On their reply: `[1]` pauses the user's original task and runs the Setup flow, then resumes the original task with the now-populated profile; `[2]` and `[3]` (deferral or anything voiceprint reads as deferral) skip ahead to steps 3-4 and run the original task directly. Do not re-ask within the same session — once asked, the gate is satisfied regardless of which branch was picked.
+2. **Onboarding gate.** After loading `voice-profile.md`, if `setup_complete: false`, run the *Permission question* (below). It is the entire response for that turn — do not draft, polish, or apply layers. Resume from the user's reply per the branching rules in that section. Do not re-ask within the same session.
 3. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `voice-profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
 4. **Then write the response.** Briefly name which layers were loaded (or already in context), so the user can see voice was actually applied rather than the model writing from memory.
 
@@ -133,7 +131,7 @@ After the first run, the data layout under `<voiceprint_home>/` is:
 
 `lessons.md`, `samples/`, and `registers/` are created only when first needed. No empty scaffolding.
 
-## Permission question (the alpha 0.7.1 onboarding gate)
+## Permission question (onboarding gate)
 
 When voiceprint activates and reads `voice-profile.md`, if `setup_complete: false`, ask the permission question **once** before doing the user's task. Pause and wait for the user's pick — do not draft, polish, or otherwise produce the response in the same turn. The permission question is the entire response for that turn. Once the user picks, voiceprint proceeds: `[1]` runs setup then resumes the original task; `[2]` and `[3]` (deferral) run the original task directly.
 
@@ -208,30 +206,11 @@ After the path question (see *Permission question* above) the flow forks into Pa
    - Single file or pasted text: H1 if present, else filename (or "Pasted text" for pastes), else "Untitled voice doc"; followed by total line count and the first ~5 non-empty lines.
    - Folder: list each file's title (same H1/filename rule per-file), one line each, plus combined total line count. No first-5-lines wall when multi-file.
 
-4. **Run the voice doc analyser.** Distill the content into the right destinations across `voice-profile.md` (multiple sections) and any register files:
+4. **Run the voice doc analyser.** Distill the content into the destinations defined in *Intelligent populator* below. The doc itself is **not** saved as a sample. For folder input, the analyser treats the combined files as one corpus — one run, one set of distilled outputs.
 
-   **voice-profile.md sections:**
-   - **Voice in a sentence** — one or two sentences capturing the user's voice at its best (the north-star line)
-   - **Cross-register notes** — voice rules that apply across every register
-   - **Things to avoid** — user-specific bans (vocabulary, phrasings, tactics) on top of the humanizer floor
-   - **Voice anchors** — recurring phrases, characteristic one-liners, signature expressions the user reaches for
+5. Hand off to the **intelligent populator** (later in this doc) — output caps and dedupe live there.
 
-   **registers/<name>.md** — register-specific notes (openers, closings, length, rhythm, etc.). Filename resolved via the *Register decoder* in this doc.
-
-   The doc itself is **not** saved as a sample. For folder input, the analyser treats the combined files as one corpus — one run, one set of distilled outputs.
-
-5. **Output caps per section** (rough guides — quality over volume; distill, never bulk-copy):
-   - Voice in a sentence: 1 entry (or skip if no clear north-star emerges)
-   - Cross-register notes: 5–10 entries
-   - Things to avoid: 3–8 entries
-   - Voice anchors: 3–8 entries
-   - Register files: as content warrants
-
-   When a doc is thin on a section, leave it empty for review-time refinement rather than padding. When it's rich (e.g. an explicit banned-vocab list, a list of characteristic phrases), distill the most distinctive — don't lift wholesale.
-
-6. Hand off to the **intelligent populator** (later in this doc).
-
-7. Frontmatter updated to `setup_complete: true, setup_method: voice-doc, last_setup_run: <today>`.
+6. Frontmatter updated to `setup_complete: true, setup_method: voice-doc, last_setup_run: <today>`.
 
 ### Path A — sample intake
 
@@ -310,7 +289,7 @@ After the path question (see *Permission question* above) the flow forks into Pa
    - ✗ "And"/"But" sentence starts — voice
    - ✗ Contractions, register, word choice — voice
 
-7. **Save each cleaned sample** to `samples/<YYYY-MM-DD>-<n>.md`. `<n>` auto-increments based on existing files for that date — if `samples/2026-05-01-1.md` and `2026-05-01-2.md` exist, the next sample written today is `2026-05-01-3.md`. Each sample file:
+7. **Save each cleaned sample** to `samples/<YYYY-MM-DD>-<slug>.md`. The slug is 2–4 lowercase hyphenated words distilled from the sample's content — its hook, theme, signature phrase, or addressee. Examples: `2026-05-01-luke-and-the-force.md`, `2026-05-01-inner-critic-letter.md`, `2026-05-02-parent-yourself.md`. The slug exists so a future reader (or you, scanning the folder) can tell what each sample is without opening it. If two samples on the same day genuinely produce the same slug, append `-2`, `-3`, etc. Each sample file:
 
    ```yaml
    ---
@@ -323,19 +302,9 @@ After the path question (see *Permission question* above) the flow forks into Pa
 
    Register lives in frontmatter (not filename) so re-classification doesn't require renaming.
 
-8. **Pattern analyser** runs across all cleaned samples. Looks for what's *consistent across* samples (recurring phrases, opening/closing instincts, vocabulary fingerprint, what the samples consistently *don't* do). Surfaces patterns into the right destinations:
+8. **Pattern analyser** runs across all cleaned samples. Looks for what's *consistent across* samples (recurring phrases, opening/closing instincts, vocabulary fingerprint, what the samples consistently *don't* do). Surfaces patterns into the destinations defined in *Intelligent populator* below.
 
-   **voice-profile.md sections:**
-   - **Voice in a sentence** — synthesis of how the samples sound at their best (1 entry max)
-   - **Cross-register notes** — rules consistent across multiple samples / registers
-   - **Things to avoid** — patterns the samples consistently *don't* do (negative space)
-   - **Voice anchors** — phrases, openings, or expressions that recur across samples
-
-   **registers/<name>.md** — patterns specific to one register
-
-   Same output caps per section as Path B.
-
-9. Hand off to the **intelligent populator**.
+9. Hand off to the **intelligent populator** — output caps and dedupe live there.
 
 10. Frontmatter updated to `setup_complete: true, setup_method: samples, last_setup_run: <today>`.
 
@@ -345,13 +314,13 @@ After Path B's voice-doc analyser or Path A's pattern analyser produces proposed
 
 **Destinations:**
 
-- `voice-profile.md` (multiple sections — every entry must land in one):
-  - **Voice in a sentence** — the north-star line (1 max per run)
-  - **Cross-register notes** — rules
-  - **Things to avoid** — user-specific bans
-  - **Voice anchors** — characteristic phrases / signature expressions
-- `registers/<name>.md` — register-scoped patterns (openers, closings, length, rhythm, etc.). Created lazily by copying `references/register-template.md` if the file doesn't exist.
-- `samples/<YYYY-MM-DD>-<n>.md` — cleaned samples (Path A only).
+- `voice-profile.md` — every entry must land in one of these four sections:
+  - **Voice in a sentence** — the north-star line, one or two sentences capturing the user's voice at its best (1 entry max per run)
+  - **Cross-register notes** — voice rules that apply across every register
+  - **Things to avoid** — user-specific bans (vocabulary, phrasings, tactics) on top of the humanizer floor
+  - **Voice anchors** — recurring phrases, characteristic one-liners, signature expressions the user reaches for
+- `registers/<name>.md` — register-specific notes (openers, closings, length, rhythm, etc.). Filename resolved via the *Register decoder*. Created lazily by copying `references/register-template.md` if the file doesn't exist.
+- `samples/<YYYY-MM-DD>-<slug>.md` — cleaned samples (Path A only). Slug is 2–4 lowercase hyphenated words distilled from content (hook, theme, signature phrase, addressee).
 
 **Output caps per section** (rough guides; quality over volume, distill never bulk-copy):
 
@@ -388,7 +357,7 @@ When a glaring contradiction is detected, voiceprint **writes both entries** (de
 ### Idempotency and additivity
 
 - **Idempotent:** re-running with the same voice doc or the same samples produces no new entries the second time (canonical-headline dedupe ensures this for `voice-profile.md` and register files).
-- **Sample files (Path A only) are NOT deduped** — each run saves new sample files with new `<n>` suffixes. Sample files are a record of what the user supplied, not a deduplicated set.
+- **Sample files (Path A only) are NOT deduped** — each run saves new sample files. Slugs differentiate same-day samples; if two samples on the same day produce the same slug, append `-2`, `-3` etc. Sample files are a record of what the user supplied, not a deduplicated set.
 - **Additive across paths:** a user can run Path A first, Path B later (or any combination). Populator merges into the same destinations. Order doesn't matter.
 
 ## Transparency summary
@@ -409,8 +378,8 @@ registers/social-posts.md (+3 entries)
 registers/newsletter.md (+2 entries)
 
 samples/ (+5 files)
-  - 2026-05-01-1.md (social-posts)
-  - 2026-05-01-2.md (newsletter)
+  - 2026-05-01-luke-and-the-force.md (social-posts)
+  - 2026-05-01-pearl-retreat-invite.md (newsletter)
   - ...
 
 Edit any file by hand if anything looks off.
@@ -436,8 +405,6 @@ if you'd like me to drop one.
 **The summary is a checkpoint, not a wall.** After voiceprint shows it, the user can challenge any entry, ask why a pattern landed where it did, request rewording, move a pattern to a different destination, or remove it altogether. Voiceprint edits files in real-time as the conversation goes. Same model end-to-end across setup and review — co-creation, not fire-and-forget.
 
 ## Approval logging (per-turn rule)
-
-**Schema note (alpha 0.7.1):** the lessons capture format is unchanged from v0.6.0. Each entry retains the fields *Timestamp*, *Register*, *You asked*, *Final approved version*, *Changes you made*. The new pattern-level review flow reads these fields without modification.
 
 When the user signals approval of a draft voiceprint generated, append a structured entry to `<voiceprint_home>/lessons.md`. Capture time stores enough raw material that a review weeks later still makes sense, the original conversation will be long gone by then.
 
@@ -512,15 +479,13 @@ When `review_threshold` is `0`, the auto-prompt is disabled. The user runs revie
 
 Triggered by the auto-prompt at threshold's `[1] Yes` OR by explicit "voiceprint review" (which fires the same flow, starting from step 3).
 
-**This replaces the v0.6.0 per-entry Approve / Reject / Edit / Skip loop entirely.** v0.6.0's per-entry decision model is removed in alpha 0.7.1. Review is now collaborative pattern-level: voiceprint extracts and shows all patterns, the user picks Update / Ignore / refine, then voiceprint writes (or doesn't).
-
-Review is a **reflection session**, not a batch operation. Setup is voiceprint absorbing material the user hands over; review is voiceprint reflecting on shared work with the user.
+Review is collaborative and pattern-level: voiceprint extracts and shows all patterns, the user picks Update / Ignore / refine, then voiceprint writes (or doesn't). It's a **reflection session**, not a batch operation — setup is voiceprint absorbing material the user hands over, review is voiceprint reflecting on shared work with the user.
 
 **Behaviour:**
 
-1. Read all entries from `lessons.md`. Each entry has the v0.6.0 schema: timestamp, register, *You asked*, *Final approved version*, *Changes you made*. Schema unchanged in alpha 0.7.1.
+1. Read all entries from `lessons.md`. Each entry has: timestamp, register, *You asked*, *Final approved version*, *Changes from first draft*.
 
-2. Pattern analyser extracts patterns across the entries, using the captured *You asked / Final approved / Changes you made* triples as raw signal. Each pattern is classified by destination — `voice-profile.md` (and which of its four sections) or `registers/<name>.md`. Patterns can land in any of: **Voice in a sentence**, **Cross-register notes**, **Things to avoid**, or **Voice anchors**, plus any register file.
+2. Pattern analyser extracts patterns across the entries, using the captured *You asked / Final approved / Changes from first draft* triples as raw signal. Each pattern is classified by destination — `voice-profile.md` (and which of its four sections) or `registers/<name>.md`. Patterns can land in any of: **Voice in a sentence**, **Cross-register notes**, **Things to avoid**, or **Voice anchors**, plus any register file.
 
 3. **Present a plain-English pattern summary.** Each pattern is written as a short headline rule (or anchor phrase, or "avoid X" entry) plus one concrete example pulled from the lessons. The example is mandatory — a rule without an example doesn't ship.
 
