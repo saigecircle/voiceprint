@@ -10,7 +10,7 @@ LLM output has a recognisable AI voice. Most non-technical users can feel it but
 
 Two paths. Pick whichever feels easier.
 
-### Option A — paste-and-tell (recommended)
+### Option A, paste-and-tell (recommended)
 
 Paste this into Claude Code:
 
@@ -18,9 +18,9 @@ Paste this into Claude Code:
 
     Add this skill to my system.
 
-Claude fetches the skill into `~/.claude/skills/voiceprint/`. That's it. The skill auto-activates whenever Claude produces output another person will read — clients, followers, teammates, collaborators, anyone besides you.
+Claude fetches the skill into `~/.claude/skills/voiceprint/`. That's it. The skill auto-activates whenever Claude produces output another person will read, clients, followers, teammates, collaborators, anyone besides you.
 
-### Option B — CLI
+### Option B, CLI
 
     claude skill add --url https://raw.githubusercontent.com/saigecircle/voiceprint/main/SKILL.md
 
@@ -28,7 +28,7 @@ For users who prefer the command line.
 
 ## Where your voice lives
 
-`~/Documents/Voiceprint/` by default. You can move it anywhere — your Obsidian vault, Dropbox, iCloud — by telling voiceprint where to put it. Voiceprint moves the folder and remembers the new location automatically.
+`~/Documents/Voiceprint/` by default. You can move it anywhere, your Obsidian vault, Dropbox, iCloud, by telling voiceprint where to put it. Voiceprint moves the folder and remembers the new location automatically.
 
 ```
 ~/Documents/Voiceprint/
@@ -44,11 +44,11 @@ It's all plain markdown. Read it, edit it, sync it.
 
 ## How it works
 
-- **Setup (optional):** say *"voiceprint setup"* for two questions — paste a few samples, name the kinds of writing you do. Each is independently skippable.
+- **Setup (optional):** say *"voiceprint setup"* for two questions, paste a few samples, name the kinds of writing you do. Each is independently skippable.
 - **Generate from scratch:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
-- **Polish what you wrote:** paste your own draft and say *"voiceprint this"*, *"polish this client email"*, *"tighten this Slack message"*, *"finesse this"*, or *"make this sound more like me"*. Voiceprint runs your text through the humanizer floor, your voice profile, and the matching register — preserving the parts that already sound like you.
+- **Polish what you wrote:** paste your own draft and say *"voiceprint this"*, *"polish this client email"*, *"tighten this Slack message"*, *"finesse this"*, or *"make this sound more like me"*. Voiceprint runs your text through the humanizer floor, your voice profile, and the matching register, preserving the parts that already sound like you.
 - **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
-- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to look at what it's noticed. Say yes, walk the queue, choose what to keep. Approved patterns sharpen your voice for everything you write from that point on. You can change the review cadence any time — *"make it 3"*, *"every 10 instead"* — or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
+- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to look at what it's noticed. Say yes, walk the queue, choose what to keep. Approved patterns sharpen your voice for everything you write from that point on. You can change the review cadence any time, *"make it 3"*, *"every 10 instead"*, or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
 
 ## Want a `/voiceprint` shortcut?
 
@@ -71,8 +71,8 @@ Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the sk
 ## What it does NOT do
 
 - Doesn't send any data anywhere. Everything is local.
-- Doesn't activate on code or notes only you will read (a private journal entry, a scratchpad). Anything with an audience — internal or external — gets voice. You can always force it on a personal note by saying *"voiceprint"* explicitly.
-- Doesn't try to replace your voice — it learns *with* you, not without you.
+- Doesn't activate on code or notes only you will read (a private journal entry, a scratchpad). Anything with an audience, internal or external, gets voice. You can always force it on a personal note by saying *"voiceprint"* explicitly.
+- Doesn't try to replace your voice, it learns *with* you, not without you.
 
 ## License
 
