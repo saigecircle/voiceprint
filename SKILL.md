@@ -1,6 +1,6 @@
 ---
 name: voiceprint
-description: Apply the user's writing voice to any output destined for another human reader, external audiences (clients, followers, readers) or internal ones (teammates, collaborators), including polishing or tightening a draft the user pasted. Also triggers on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks), loads on top, not instead of them. Does NOT trigger on code or notes the user is writing only for themselves.
+description: Apply the user's writing voice to any output destined for another human reader, external audiences (clients, followers, readers) or internal ones (teammates, collaborators), including polishing or tightening a draft the user pasted. Also triggers on any prompt mentioning "voiceprint". Strips AI tells, seeds at setup or learns the user's voice over time. Stacks with other skills (brand context, frameworks), loads on top, not instead of them. Does NOT trigger on code or notes the user is writing only for themselves.
 ---
 
 # voiceprint
