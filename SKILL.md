@@ -114,25 +114,60 @@ The first time voiceprint activates on a machine where the data folder does not 
 
 1. Resolve voiceprint home as described above. On a fresh install with no pointer file, this resolves to `~/Documents/Voiceprint/`.
 2. Create the home folder.
-3. Copy `references/voice-profile-template.md` from the skill folder to `<voiceprint_home>/voice-profile.md`. No frontmatter values need editing, the template ships with the right defaults.
+3. Copy `references/voice-profile-template.md` from the skill folder to `<voiceprint_home>/voice-profile.md`. The template ships with `setup_complete: false`, so the next activation will trigger the permission question.
 4. Create `~/.claude/voiceprint/` if it does not exist, and write the resolved absolute path of the home folder into `~/.claude/voiceprint/voiceprint_home.txt`.
 5. Print a one-time announcement at the end of the current response. The announcement should communicate, in voiceprint's own warm and direct phrasing:
    - Where the profile was created (using the actual resolved path, not a placeholder).
-   - That the folder can be moved any time by telling voiceprint where to put it, voiceprint handles the move and remembers the new location automatically. No environment variables, no manual config.
-
-Phrasing is voiceprint's call. The announcement shows once, ever, never on subsequent activations.
+   - That the folder can be moved any time by telling voiceprint where to put it.
 
 After the first run, the data layout under `<voiceprint_home>/` is:
 
 ```
 <voiceprint_home>/
-├── voice-profile.md # core voice, frontmatter + cross-register user additions
-├── lessons.md       # rolling capture log of approved drafts (created lazily on first approval)
-├── samples/         # raw writing samples (created at setup)
-└── registers/       # one file per register, created lazily
+├── voice-profile.md   # core voice, frontmatter + cross-register user additions
+├── lessons.md         # rolling capture log of approved drafts (created lazily)
+├── samples/           # cleaned writing samples saved at setup (created lazily)
+└── registers/         # one file per register, created lazily
 ```
 
-Lessons file and the two subdirectories are created only when first needed. No empty scaffolding.
+`lessons.md`, `samples/`, and `registers/` are created only when first needed. No empty scaffolding.
+
+## Permission question (the alpha 0.7.0 onboarding gate)
+
+When voiceprint activates and reads `voice-profile.md`, if `setup_complete: false`, ask the permission question **once** before doing the user's task. Do not pause the task yet — only pause if the user picks `[1]`.
+
+```
+Want to complete voiceprint setup first? Takes about 3 minutes —
+either paste an existing voice doc, or paste 3-5 writing samples.
+Voiceprint reads them and seeds your voice profile so day-one drafts
+sound like you.
+
+  [1] Yes — set me up now
+  [2] Not now — ask me next session
+  [3] Other — specify
+```
+
+Branching:
+
+- `[1]` → pause the task, run the path question (next subsection), then resume the original task with the now-populated profile.
+- `[2]` → continue with the user's original task. `setup_complete` stays `false`. Voiceprint asks again on the next session's first activation. The user can stop being asked at any time by saying "stop asking about setup", which sets `setup_complete: true, setup_method: skipped`.
+- `[3]` → user types free-form. Voiceprint applies these rules in order:
+  1. If the response semantically matches `[1]` (e.g. "yeah set me up", "let's do it"), treat as `[1]`.
+  2. If it semantically matches `[2]` (e.g. "later", "not right now", "skip for now"), treat as `[2]`.
+  3. If it semantically matches a permanent skip (e.g. "never ask", "stop asking", "I don't want this"), set `setup_complete: true, setup_method: skipped`.
+  4. If the response asks a question (e.g. "what does setup do?"), answer it briefly and re-show the prompt.
+  5. Otherwise, re-show the prompt with a one-line note: "I didn't catch that — please pick one." Never silently write anything to disk.
+
+If the user picks `[1]`, the next prompt picks the path:
+
+```
+Set up your voice profile?
+  [1] Import an existing voice doc — recommended
+  [2] Paste 3-5 writing samples
+  [3] Other — specify
+```
+
+`[1]` → Path B (voice doc intake). `[2]` → Path A (sample intake). `[3]` → free-form, voiceprint resolves to Path B or Path A or re-asks.
 
 ## Setup flow
 
