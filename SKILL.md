@@ -1,6 +1,6 @@
 ---
 name: voiceprint
-description: Apply the user's writing voice to drafts. Triggers on writing requests AND on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Does NOT trigger on code, or on edits/proofreads of user-supplied text (where the user's voice is already present).
+description: Apply the user's writing voice to drafts. Triggers on writing requests AND on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code, edits/proofreads of user-supplied text, or scheduling/publishing requests (→ social-media-manager).
 ---
 
 # voiceprint
@@ -20,6 +20,8 @@ Do NOT activate when:
 2. **The request is an edit or proofread on user-supplied text.** "Proofread my draft", "tighten this paragraph I wrote", "fix the typos in this email" — the user's voice is already present in the text. Touching it with voiceprint risks overwriting them with the model's interpretation of "their voice".
 
 Also stay out for any specific request where the user signals they want raw output. Seeded examples: "neutral summary", "just the facts", "no voice", "raw", "plain", "no styling". Judge intent — if the user asks for an objective summary or a bulleted brief with no voice, deliver that.
+
+**Stacking.** Voiceprint is an enhancer, not a replacement. If another skill (brand context, copywriter framework, HTAC, etc.) is already loaded for the same request, voiceprint loads on top — it does not yield. Brand context tells you what to say; voiceprint controls how it sounds.
 
 **Tie-break:** when in doubt, activate. False-positive cost is low (the user gets voice on output they would write that way anyway, or asks for raw and gets it). False-negative cost is real (AI tells leak through, the user redoes the work).
 
@@ -136,7 +138,7 @@ When the user signals approval of a draft voiceprint generated, append a structu
 
 **Approval signal.** Judge intent. Seeded canonical examples that count: "perfect", "that's it", "use this", "send it", "yes this is closest to my voice", "love it", "ship it". Extend probabilistically: "yeah this works", "better", "go with this one", "nailed it", "yep" all count. Things that look like approval but are not — "perfect… but make it shorter", "love it, can we tweak the close?" — do NOT count. Those are revision signals; wait for approval on the next iteration.
 
-**Entry format.** When approval fires, append this block to `lessons.md` (creating the file if it does not exist):
+**Entry format.** When approval fires, append this block to `lessons.md` (creating the file if it does not exist — if creating, write `# Lessons\n` as the first line before the first entry):
 
 ```markdown
 ---
@@ -159,6 +161,8 @@ If the user accepted Claude's draft as written (no edits between draft and appro
 **Changes you made from my draft:**
 (none — accepted as written)
 ```
+
+**Post-approval edits.** Approval often fires before the user finishes polishing. If the user edits a draft that voiceprint already logged as approved within the current session, update the lessons.md entry in place: replace the final approved version with the revised text, and update the diff to reflect what changed from voiceprint's original draft (not from the first-approved version). Timestamp and register stay unchanged. The signal to detect: the user changes specific lines of a draft voiceprint just wrote, within the same session, after an approval was logged.
 
 Use the local timestamp in `YYYY-MM-DDTHH:MM` form. The `<register-name>` is the slug used for the matching register (e.g. `social-posts`, `client-comms`). The full approved text goes into the blockquote, even if it is long — completeness matters more than tidiness here, because review time has only what was captured.
 
@@ -226,11 +230,11 @@ Everything goes into a single review queue. Approvals missed in past sessions ar
 
 1. **Position in the queue** — e.g. "1 of 5".
 2. **The original prompt** — the date and what the user asked for.
-3. **The approved draft** — quoted; can be excerpted for length, with an indicator that it was excerpted.
+3. **The approved draft** — show in full inline, or if the draft is too long to read comfortably in the card, tell the user exactly where to find it: the resolved `<voiceprint_home>/lessons.md` path and the entry heading (e.g. `## 2026-05-01T12:00 — ad-copy`). Never silently excerpt.
 4. **The diff** — what the user changed from voiceprint's draft (or "accepted as written" if they did not).
 5. **The pattern voiceprint extracted** — what voiceprint noticed about the user's voice from this entry, plus the proposed destination (a specific register file, the cross-register user-additions area in profile.md, or samples/).
 
-End each card by asking the user to choose one of four actions: **Approve**, **Reject**, **Edit**, **Skip**. Single-letter shortcuts (A/R/E/S) or full words are both fine. Layout, separators, and exact phrasing are voiceprint's call.
+End each card by asking the user to choose one of four actions: always spell them out — **Approve**, **Reject**, **Edit**, **Skip** — with single-letter shortcuts in parentheses: e.g. "Approve (A) / Reject (R) / Edit (E) / Skip (S)". Never show letters alone without the word — A/R/E/S on its own is opaque. Layout, separators, and surrounding phrasing are voiceprint's call.
 
 **Step 4 — apply each action.**
 
@@ -248,8 +252,8 @@ End each card by asking the user to choose one of four actions: **Approve**, **R
 
 **Step 6 — closing message.** Print a one-line confirmation that reflects the current setting, so the user always sees the system is alive and behaving as they configured it.
 
-- **If `review_threshold > 0` (auto mode):** confirm the review is complete and that another check-in will come once another threshold's worth of lessons has accumulated (use the actual threshold value, never a hardcoded number). Phrasing is voiceprint's call.
-- **If `review_threshold == 0` (manual mode):** confirm the review is complete, voiceprint will not check in on its own, the user can run a review on demand by saying "voiceprint review" (or similar), and the user can re-enable auto-prompts any time by giving voiceprint a number. Phrasing is voiceprint's call.
+- **If `review_threshold > 0` (auto mode):** confirm the review is complete and that another check-in will come once N more patterns have been captured (use the actual threshold value, never a hardcoded number — use the word "patterns" in the user-facing message). Then tell the user to open a new session for the updated patterns to take effect. Phrasing is voiceprint's call.
+- **If `review_threshold == 0` (manual mode):** confirm the review is complete, voiceprint will not check in on its own, the user can run a review on demand by saying "voiceprint review" (or similar), and the user can re-enable auto-prompts any time by giving voiceprint a number. Then tell the user to open a new session for the updated patterns to take effect. Phrasing is voiceprint's call.
 
 This design means **pattern extraction happens once, at review time, when accuracy matters**. Capture stores raw material; the analytical work happens when the user is paying attention to the result.
 
