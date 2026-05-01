@@ -35,8 +35,8 @@ Also stay out for any specific request where the user signals they want raw outp
 
 Once voiceprint is activated, whether the user is asking for a fresh draft or handing over their own text to polish, the response order is fixed:
 
-1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context, see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
-2. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
+1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/voice-profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context, see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
+2. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `voice-profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
 3. **Then write the response.** Briefly name which layers were loaded (or already in context), so the user can see voice was actually applied rather than the model writing from memory.
 
 If a layer file is missing or unreadable, surface that before responding, never silently skip a layer.
@@ -62,7 +62,7 @@ Throughout this document, `<voiceprint_home>` is shorthand for the resolved path
 **Relocation flow.** When the user says "move voiceprint to <new path>" (or anything Claude reads as that intent, "put voiceprint in my Obsidian vault", "relocate the voiceprint folder to Dropbox"), voiceprint:
 
 1. Creates the new folder if it does not exist.
-2. Moves the existing data (profile.md, lessons.md, samples/, registers/) into it.
+2. Moves the existing data (voice-profile.md, lessons.md, samples/, registers/) into it.
 3. Rewrites `~/.claude/voiceprint/voiceprint_home.txt` with the new absolute path.
 4. Uses the new path immediately in the same session, no restart needed.
 
@@ -72,13 +72,13 @@ The pointer file is never bundled inside the skill folder. Skill updates (which 
 
 Voice is layered, applied from broadest floor to narrowest tweak. Three layers, loaded in order:
 
-1. **Humanizer floor.** Load `references/humanizer.md` from the skill folder. These rules strip AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth, hedging, predictable openers). The humanizer is the floor every draft sits on, regardless of register. Lives in the skill repo, never duplicated into `<voiceprint_home>/profile.md`, so humanizer updates reach existing users automatically the moment they update the skill.
-2. **User additions.** Load `<voiceprint_home>/profile.md`. The frontmatter has settings; the body holds cross-register voice rules the user has approved during reviews ("I open with a quiet observation", "I avoid corporate verbs", "I close with a question, not a CTA"). These layer on top of the humanizer floor and apply to every register.
+1. **Humanizer floor.** Load `references/humanizer.md` from the skill folder. These rules strip AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth, hedging, predictable openers). The humanizer is the floor every draft sits on, regardless of register. Lives in the skill repo, never duplicated into `<voiceprint_home>/voice-profile.md`, so humanizer updates reach existing users automatically the moment they update the skill.
+2. **User additions.** Load `<voiceprint_home>/voice-profile.md`. The frontmatter has settings; the body holds cross-register voice rules the user has approved during reviews ("I open with a quiet observation", "I avoid corporate verbs", "I close with a question, not a CTA"). These layer on top of the humanizer floor and apply to every register.
 3. **Matching register.** Resolve the register filename from the request (see *Register decoder* below). If `<voiceprint_home>/registers/<name>.md` exists, load it. If not, create it lazily by copying `references/register-template.md` and continue with the empty scaffold, the next draft for this register will fill it in over time.
 
 **Loading rule.** Read each layer the first time it's needed in a session, then rely on what's already in context for subsequent drafts. Don't re-Read files that have already been loaded this session, the content is already there, and re-reading just burns tokens without changing anything. The matching register may be different from one draft to the next; load each new register the first time it's needed, then keep using the in-context copy for further drafts in that register.
 
-This is also why the review flow tells the user to open a new session for newly-approved patterns to take effect: the on-disk `profile.md` and register files have changed, but the in-context copies are stale until a fresh session reloads them.
+This is also why the review flow tells the user to open a new session for newly-approved patterns to take effect: the on-disk `voice-profile.md` and register files have changed, but the in-context copies are stale until a fresh session reloads them.
 
 Generate the draft applying these three layers, narrowest layer winning when they conflict. The humanizer never overrides a user-approved rule; a user-approved cross-register rule never overrides a register-specific note. Layered, not averaged.
 
@@ -114,7 +114,7 @@ The first time voiceprint activates on a machine where the data folder does not 
 
 1. Resolve voiceprint home as described above. On a fresh install with no pointer file, this resolves to `~/Documents/Voiceprint/`.
 2. Create the home folder.
-3. Copy `references/profile-template.md` from the skill folder to `<voiceprint_home>/profile.md`. No frontmatter values need editing, the template ships with the right defaults.
+3. Copy `references/voice-profile-template.md` from the skill folder to `<voiceprint_home>/voice-profile.md`. No frontmatter values need editing, the template ships with the right defaults.
 4. Create `~/.claude/voiceprint/` if it does not exist, and write the resolved absolute path of the home folder into `~/.claude/voiceprint/voiceprint_home.txt`.
 5. Print a one-time announcement at the end of the current response. The announcement should communicate, in voiceprint's own warm and direct phrasing:
    - Where the profile was created (using the actual resolved path, not a placeholder).
@@ -126,7 +126,7 @@ After the first run, the data layout under `<voiceprint_home>/` is:
 
 ```
 <voiceprint_home>/
-├── profile.md       # core voice, frontmatter + cross-register user additions
+├── voice-profile.md # core voice, frontmatter + cross-register user additions
 ├── lessons.md       # rolling capture log of approved drafts (created lazily on first approval)
 ├── samples/         # raw writing samples (created at setup)
 └── registers/       # one file per register, created lazily
@@ -206,7 +206,7 @@ Pattern extraction happens at *review time*, not capture time. Capture is fast a
 
 **When the prompt fires.** When the entry count crosses a multiple of `review_threshold` (5, 10, 15, … by default). One prompt per crossing, no nagging. If the user defers at 5, voiceprint stays quiet until the count reaches 10, then prompts again.
 
-**Threshold storage.** `review_threshold` lives in `profile.md` frontmatter, default `5`. `0` disables auto-prompting entirely (manual-only mode). Update the frontmatter when the user asks:
+**Threshold storage.** `review_threshold` lives in `voice-profile.md` frontmatter, default `5`. `0` disables auto-prompting entirely (manual-only mode). Update the frontmatter when the user asks:
 
 | User says | Set `review_threshold` to |
 |---|---|
@@ -215,7 +215,7 @@ Pattern extraction happens at *review time*, not capture time. Capture is fast a
 | "manual only", "don't prompt me", "I'll do it myself" | `0` |
 | "go back to auto", "check in every 5 again" (from manual) | matching number |
 
-**First auto-prompt** (when `auto_prompt_intro_shown` is `false` in `profile.md` frontmatter). Print a short message at the end of the current response with two parts:
+**First auto-prompt** (when `auto_prompt_intro_shown` is `false` in `voice-profile.md` frontmatter). Print a short message at the end of the current response with two parts:
 
 1. **The nudge:** voiceprint has noticed N things about the user's voice (use the actual current count) and offer to look at them now.
 2. **The dial explanation (shown once, ever):** the current threshold (use the actual value), that it is adjustable to any number, smaller for more frequent reviews, larger for a longer stretch, that the user can switch to manual-only mode (which stops prompts entirely; reviews then run on demand via "voiceprint review" or similar phrasing), and that the user just tells voiceprint what they want.
@@ -256,7 +256,7 @@ Everything goes into a single review queue. Approvals missed in past sessions ar
 2. **The original prompt**, the date and what the user asked for.
 3. **The approved draft**, show in full inline, or if the draft is too long to read comfortably in the card, tell the user exactly where to find it: the resolved `<voiceprint_home>/lessons.md` path and the entry heading (e.g. `## 2026-05-01T12:00, ad-copy`). Never silently excerpt.
 4. **The diff**, what the user changed from voiceprint's draft (or "accepted as written" if they did not).
-5. **The pattern voiceprint extracted**, what voiceprint noticed about the user's voice from this entry, plus the proposed destination (a specific register file, the cross-register user-additions area in profile.md, or samples/).
+5. **The pattern voiceprint extracted**, what voiceprint noticed about the user's voice from this entry, plus the proposed destination (a specific register file, the cross-register user-additions area in voice-profile.md, or samples/).
 
 End each card by asking the user to choose one of four actions: always spell them out, **Approve**, **Reject**, **Edit**, **Skip**, with single-letter shortcuts in parentheses: e.g. "Approve (A) / Reject (R) / Edit (E) / Skip (S)". Never show letters alone without the word, A/R/E/S on its own is opaque. Layout, separators, and surrounding phrasing are voiceprint's call.
 
@@ -264,10 +264,10 @@ End each card by asking the user to choose one of four actions: always spell the
 
 - **Approved.** Write the pattern wherever it best fits **inside the existing user data layout**, decided at the moment of approval based on what the pattern is. Possible destinations:
   - The matching register file at `<voiceprint_home>/registers/<name>.md` (most common, register-specific rules).
-  - The cross-register user-additions area in `<voiceprint_home>/profile.md` (rules that apply across every register).
+  - The cross-register user-additions area in `<voiceprint_home>/voice-profile.md` (rules that apply across every register).
   - `<voiceprint_home>/samples/` as a new exemplar file (when what is captured is more an artifact-as-reference than a stateable rule).
   
-  Stay within the declared structure (`profile.md`, `lessons.md`, `samples/`, `registers/`). No inventing new top-level files or folders. Remove the entry from `lessons.md` after writing.
+  Stay within the declared structure (`voice-profile.md`, `lessons.md`, `samples/`, `registers/`). No inventing new top-level files or folders. Remove the entry from `lessons.md` after writing.
 - **Rejected.** Remove the entry from `lessons.md`. **No separate rejected file.** If the same pattern resurfaces in a future review, that is the signal the original rejection was wrong, the pattern IS the user's voice. Don't suppress it permanently.
 - **Edited.** The user edits the **pattern description** voiceprint proposed (rewording "opens with quiet observation under 15 words" into something that better captures their voice rule). The captured draft text and destination logic are unchanged, write the user-edited pattern to the same place an Approved pattern would go. Remove the entry from `lessons.md`.
 - **Skipped.** Leave the entry in `lessons.md` for the next review.
@@ -287,8 +287,8 @@ If an approval is missed, that approval will simply not appear in `lessons.md`. 
 
 **Error handling, single rule: never silently corrupt user data.**
 
-- If `profile.md` is **missing** (file does not exist), treat as new user, copy from template.
-- If `profile.md` **exists but is unreadable** (sync conflict, partial corruption, permission issue), stop and surface a clear repair message. Tell the user which file is unreadable, where it lives, and what to check (sync conflict, permissions, manual edit gone wrong). Stay paused on writes until the file is repaired or moved aside.
+- If `voice-profile.md` is **missing** (file does not exist), treat as new user, copy from template.
+- If `voice-profile.md` **exists but is unreadable** (sync conflict, partial corruption, permission issue), stop and surface a clear repair message. Tell the user which file is unreadable, where it lives, and what to check (sync conflict, permissions, manual edit gone wrong). Stay paused on writes until the file is repaired or moved aside.
 - If a required frontmatter field is **missing or invalid** (`review_threshold` deleted or set to a non-number, etc.), silently fall back to the default value AND write the default back into the frontmatter. Self-healing, no warning.
 - If `lessons.md` is malformed (one bad entry), skip the bad entry and proceed with the rest.
 - All writes use Claude's built-in file tools, no shell scripting, no platform-specific quirks.
