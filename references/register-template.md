@@ -1,6 +1,6 @@
 # Register notes
 
-This register file holds context-specific voice notes: patterns voiceprint has noticed about how you write *in this particular register* (e.g. LinkedIn posts, client emails, blog articles). Cross-register rules live in `profile.md` instead.
+This register file holds context-specific voice notes: patterns voiceprint has noticed about how you write *in this particular register* (e.g. LinkedIn posts, client emails, blog articles). Cross-register rules live in `voice-profile.md` instead.
 
 Voiceprint appends approved patterns under the sections below during reviews. You can edit anything by hand.
 
