@@ -218,6 +218,106 @@ After the path question (see *Permission question* above) the flow forks into Pa
 
 7. Frontmatter updated to `setup_complete: true, setup_method: voice-doc, last_setup_run: <today>`.
 
+### Path A — sample intake
+
+1. Ask for samples:
+
+   ```
+   Show me your samples:
+     [1] Paste them here (separate multiple samples with --- or blank lines)
+     [2] One file — give me the path
+     [3] Entire folder — give me the path (I'll treat each file as a sample)
+     [4] Other — specify
+   ```
+
+2. **If `[1]` (paste)**, voiceprint splits on `---`, double blank lines, or file boundaries. If the count is clear, surface it as a confirmation. If genuinely unclear:
+
+   ```
+   I see one block of text. How should I read it?
+     [1] One sample
+     [2] Multiple — I'll add separators and re-paste
+     [3] Multiple — split where you think the boundaries are, I'll review
+     [4] Other — specify
+   ```
+
+3. **If `[2]` (one file)**, read the file as a single sample.
+
+4. **If `[3]` (entire folder)**, list the `.md`/`.txt` files voiceprint sees in the folder (no recursion) and confirm before treating each as one sample:
+
+   ```
+   I see N files in <folder>:
+     - sample-1.md
+     ...
+
+   Treat each file as one sample?
+     [1] Yes — all N as samples
+     [2] Skip some — tell me which to exclude
+     [3] Other — specify
+   ```
+
+5. **Batched register confirmation.** Show all N samples with voiceprint's best-guess register classification per sample, in one consolidated prompt:
+
+   ```
+   I see N samples. Here's how I'd classify them:
+
+   Sample 1: <register>
+     "<first ~80 chars of sample>..."
+   Sample 2: <register>
+     ...
+
+   Confirm or correct?
+     [1] All correct
+     [2] Tell me what to change
+     [3] Other — specify
+   ```
+
+   `[2]` → user says e.g. "sample 2 is a blog post, others correct". Voiceprint updates and re-shows.
+
+6. **Per-sample proofread.** For each sample, scan for typos. **Skip the prompt entirely if no typos found** — no null prompts. If typos are found:
+
+   ```
+   Sample N — possible typos:
+     "I went the shop" → "I went to the shop"
+     "teh" → "the"
+
+   What should I do?
+     [1] Accept all
+     [2] Reject all — save as-is
+     [3] Other — specify (e.g. "accept the first only")
+   ```
+
+   **Proofread rules:**
+   - ✓ Typos (`teh` → `the`)
+   - ✓ Missing words (`I went the shop` → `I went to the shop`)
+   - ✓ Genuinely broken syntax (a sentence missing its subject by accident)
+   - ✗ Sentence fragments — voice
+   - ✗ Comma splices — voice
+   - ✗ "And"/"But" sentence starts — voice
+   - ✗ Contractions, register, word choice — voice
+
+7. **Save each cleaned sample** to `samples/<YYYY-MM-DD>-<n>.md`. `<n>` auto-increments based on existing files for that date — if `samples/2026-05-01-1.md` and `2026-05-01-2.md` exist, the next sample written today is `2026-05-01-3.md`. Each sample file:
+
+   ```yaml
+   ---
+   register: social-posts
+   date: 2026-05-01
+   ---
+
+   [cleaned sample text]
+   ```
+
+   Register lives in frontmatter (not filename) so re-classification doesn't require renaming.
+
+8. **Pattern analyser** runs across all cleaned samples. Looks for what's *consistent across* samples (recurring phrases, opening/closing instincts, vocabulary fingerprint). Surfaces:
+   - Patterns specific to one register → matching `registers/<name>.md`
+   - Patterns consistent across multiple registers → cross-register, `voice-profile.md`
+
+   **Output cap: 5–10 high-signal additions total** across all destinations.
+
+9. Hand off to the **intelligent populator**.
+
+10. Frontmatter updated to `setup_complete: true, setup_method: samples, last_setup_run: <today>`.
+
 ## Approval logging (per-turn rule)
 
 When the user signals approval of a draft voiceprint generated, append a structured entry to `<voiceprint_home>/lessons.md`. Capture time stores enough raw material that a review weeks later still makes sense, the original conversation will be long gone by then.
