@@ -141,6 +141,8 @@ When the user signals approval of a draft voiceprint generated, append a structu
 
 **Approval signal.** Judge intent. Seeded canonical examples that count: "perfect", "that's it", "use this", "send it", "yes this is closest to my voice", "love it", "ship it". Extend probabilistically: "yeah this works", "better", "go with this one", "nailed it", "yep" all count. Things that look like approval but are not — "perfect… but make it shorter", "love it, can we tweak the close?" — do NOT count. Those are revision signals; wait for approval on the next iteration.
 
+**First draft tracking.** Hold the very first version of the content in memory as the baseline for this thread — whether that is voiceprint's first generated draft, or a draft the user supplied to kick off the iteration. If the user asks for revisions and voiceprint produces a second, third, or fourth draft, the baseline does not change. The diff at approval time always compares the final approved version against that original starting point, not the most recent intermediate draft. This captures the full distance travelled — between where the content started and where the user actually wanted it to land — which is where the real voice learning lives.
+
 **Entry format.** When approval fires, append this block to `lessons.md` (creating the file if it does not exist — if creating, write `# Lessons\n` as the first line before the first entry):
 
 ```markdown
@@ -153,19 +155,19 @@ When the user signals approval of a draft voiceprint generated, append a structu
 **Final approved version:**
 > <the full final approved text — full, not an 80-char excerpt>
 
-**Changes you made from my draft:**
+**Changes from first draft:**
 - <bullet describing change 1>
 - <bullet describing change 2>
 ```
 
-If the user accepted Claude's draft as written (no edits between draft and approval), the last section reads:
+If the user accepted voiceprint's first draft as written (no edits across any iteration), the last section reads:
 
 ```markdown
-**Changes you made from my draft:**
+**Changes from first draft:**
 (none — accepted as written)
 ```
 
-**Post-approval edits.** Approval often fires before the user finishes polishing. If the user edits a draft that voiceprint already logged as approved within the current session, update the lessons.md entry in place: replace the final approved version with the revised text, and update the diff to reflect what changed from voiceprint's original draft (not from the first-approved version). Timestamp and register stay unchanged. The signal to detect: the user changes specific lines of a draft voiceprint just wrote, within the same session, after an approval was logged.
+**Post-approval edits.** Approval often fires before the user finishes polishing. If the user edits a draft that voiceprint already logged as approved within the current session, update the lessons.md entry in place: replace the final approved version with the revised text, and update the diff to reflect what changed from the first draft (not from the first-approved version). Timestamp and register stay unchanged. The signal to detect: the user changes specific lines of a draft voiceprint just wrote, within the same session, after an approval was logged.
 
 Use the local timestamp in `YYYY-MM-DDTHH:MM` form. The `<register-name>` is the slug used for the matching register (e.g. `social-posts`, `client-comms`). The full approved text goes into the blockquote, even if it is long — completeness matters more than tidiness here, because review time has only what was captured.
 
@@ -175,7 +177,7 @@ Use the local timestamp in `YYYY-MM-DDTHH:MM` form. The `<register-name>` is the
 |---|---|
 | **You asked** | Reminds the user what they were trying to make |
 | **Final approved version** | The actual artifact whose voice we are learning from |
-| **Changes you made** | The strongest signal — what the user actively reshaped |
+| **Changes from first draft** | The strongest signal — the full distance between AI default and the user's real voice |
 
 Pattern extraction happens at *review time*, not capture time. Capture is fast and lossless; analysis is slower and more accurate when the user is paying attention to the result.
 
