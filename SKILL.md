@@ -36,8 +36,9 @@ Also stay out for any specific request where the user signals they want raw outp
 Once voiceprint is activated, whether the user is asking for a fresh draft or handing over their own text to polish, the response order is fixed:
 
 1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/voice-profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context, see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
-2. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `voice-profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
-3. **Then write the response.** Briefly name which layers were loaded (or already in context), so the user can see voice was actually applied rather than the model writing from memory.
+2. **Onboarding gate (alpha 0.7.0).** Immediately after loading `voice-profile.md` for the first time in a session, check its frontmatter. If `setup_complete: false`, surface the permission question once before continuing (see *Permission question* below). `[1]` pauses the user's task and runs the Setup flow, then resumes. `[2]` and `[3]` (deferral or anything voiceprint reads as deferral) fall through to step 3, the original task continues uninterrupted. Do not re-ask within the same session, once asked, the gate is satisfied for this session regardless of branch.
+3. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `voice-profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
+4. **Then write the response.** Briefly name which layers were loaded (or already in context), so the user can see voice was actually applied rather than the model writing from memory.
 
 If a layer file is missing or unreadable, surface that before responding, never silently skip a layer.
 
