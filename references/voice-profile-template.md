@@ -1,7 +1,9 @@
 ---
-voiceprint_version: 0.6.0
+voiceprint_version: alpha 0.7.0
 review_threshold: 5
-auto_prompt_intro_shown: false
+setup_complete: false
+setup_method:
+last_setup_run:
 ---
 
 # Voice profile
@@ -10,11 +12,11 @@ This file holds your **cross-register voice rules**: the things that are true ab
 
 The humanizer floor (em-dash removal, banned vocabulary, generic-warmth fixes) is applied automatically from the skill itself on every draft. You don't need to copy it here. Only your own additions go in this file.
 
-Voiceprint adds to the sections below over time, when you approve patterns during a review. You're welcome to edit anything by hand. It's your file.
+Voiceprint adds to the sections below at setup time and during reviews, with your input. You're welcome to edit anything by hand. It's your file.
 
 ## Cross-register notes
 
-Voice rules that apply across every register. Approved review patterns destined for "core profile" land here.
+Voice rules that apply across every register. Setup-imported and review-approved patterns destined for "core profile" land here.
 
 ## Things to avoid
 
