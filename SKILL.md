@@ -448,82 +448,112 @@ Pattern extraction happens at *review time*, not capture time. Capture is fast a
 
 ## Auto-prompt at threshold
 
-**When the check runs.** Right after writing a new entry to `lessons.md`. That is the only moment the count changes, so no other check is needed.
+When the entry count in `lessons.md` crosses a multiple of `review_threshold` (default 5), voiceprint asks the user once whether to review:
 
-**When the prompt fires.** When the entry count crosses a multiple of `review_threshold` (5, 10, 15, … by default). One prompt per crossing, no nagging. If the user defers at 5, voiceprint stays quiet until the count reaches 10, then prompts again.
+```
+I've noticed N patterns in the last few drafts.
+Want to review them with me?
 
-**Threshold storage.** `review_threshold` lives in `voice-profile.md` frontmatter, default `5`. `0` disables auto-prompting entirely (manual-only mode). Update the frontmatter when the user asks:
+  [1] Yes — let's review
+  [2] Later
+  [3] Other — specify
+```
+
+`[1]` → run the review flow (next section). `[2]` → defer. Voiceprint stays quiet until the count crosses the *next* multiple of `review_threshold`. No nagging within a threshold window.
+
+`review_threshold` lives in `voice-profile.md` frontmatter. Default 5. `0` disables auto-prompts entirely (manual-only mode). Update the frontmatter when the user asks:
 
 | User says | Set `review_threshold` to |
 |---|---|
-| "make it 3", "more frequent", "every 2" | matching number |
-| "every 10 instead", "longer stretch", "7" | matching number |
-| "manual only", "don't prompt me", "I'll do it myself" | `0` |
-| "go back to auto", "check in every 5 again" (from manual) | matching number |
+| "review every 3" / "smaller batches" | 3 |
+| "review every 10" | 10 |
+| "stop auto-prompting reviews" / "manual only" | 0 |
 
-**First auto-prompt** (when `auto_prompt_intro_shown` is `false` in `voice-profile.md` frontmatter). Print a short message at the end of the current response with two parts:
+When `review_threshold` is `0`, the auto-prompt is disabled. The user runs reviews on demand by saying "voiceprint review" (or similar — judge intent).
 
-1. **The nudge:** voiceprint has noticed N things about the user's voice (use the actual current count) and offer to look at them now.
-2. **The dial explanation (shown once, ever):** the current threshold (use the actual value), that it is adjustable to any number, smaller for more frequent reviews, larger for a longer stretch, that the user can switch to manual-only mode (which stops prompts entirely; reviews then run on demand via "voiceprint review" or similar phrasing), and that the user just tells voiceprint what they want.
+## Review flow (pattern-level co-creation)
 
-Phrasing is voiceprint's call. After printing this, flip `auto_prompt_intro_shown` to `true` in the frontmatter so the long version never repeats. This stays `true` for the lifetime of the profile, even if the user later switches to manual mode and back to auto, the intro is shown once per user, not once per round of auto.
+Triggered by the auto-prompt at threshold OR by explicit "voiceprint review".
 
-**Subsequent auto-prompts** (short form). Print a short message at the end of the current response with two parts:
+**This replaces the v0.6.0 per-entry Approve / Reject / Edit / Skip loop entirely.** v0.6.0's per-entry decision model is removed in alpha 0.7.0. Review is now collaborative pattern-level: voiceprint extracts and shows all patterns, the user co-creates, then voiceprint writes once on explicit confirmation.
 
-1. **The nudge:** voiceprint has noticed N things (use the actual current count) and offer to look at them now.
-2. **The lightweight reminder:** the current threshold (use the actual value) and that the user can change it or switch to manual reviews. No re-explanation of the dial.
+Review is a **reflection session**, not a batch operation. Setup is voiceprint absorbing material the user hands over; review is voiceprint reflecting on shared work with the user.
 
-Both forms always use the actual current threshold and lessons count, never hardcoded numbers.
+**Behaviour:**
 
-If the user says "yes", "sure", "okay", "let's go", "go for it", or any clear assent, **start the review flow immediately**, the user does not need to type "voiceprint review". If the user says "not now", "later", "busy", etc., defer. The prompt resurfaces next time the threshold is crossed.
+1. Read all entries from `lessons.md`. Each entry has the v0.6.0 schema: timestamp, register, *You asked*, *Final approved version*, *Changes you made*. Schema unchanged in alpha 0.7.0.
 
-When `review_threshold` is `0`, the auto-prompt is disabled entirely. The user runs reviews on their own schedule by saying "voiceprint review" (or similar, judge intent). They can re-enable auto-prompts any time by giving voiceprint a number.
+2. Pattern analyser extracts patterns across the entries, using the captured *You asked / Final approved / Changes you made* triples as raw signal.
 
-## Review flow (the main learning loop)
+3. **Present proposed patterns and their destinations** — clean and tight, no evidence dump by default. Lesson chunks are only shown if (a) the user asks "why did you extract that?" or (b) voiceprint needs to surface a chunk for clarity.
 
-The review flow is the heart of voiceprint. It runs whenever either of the following happens:
+   ```
+   I've reviewed the last N drafts. Here's what I'm seeing:
 
-- The user responds yes / sure / okay / let's go to the auto-prompt (auto mode only).
-- The user says "voiceprint review" any time (judge intent, "review my voice lessons", "what has voiceprint learned?", "let's look at what you've noticed" all work).
+   Pattern 1 — voice-profile.md
+   "Land the point and stop. No wrap-up sentence."
 
-In manual mode (`review_threshold: 0`), the second path is the only one available, there is no auto-prompt to respond to. In auto mode, both paths are available. Both run the same flow.
+   Pattern 2 — registers/social-posts.md
+   "Open with a one-line observation, not a hook."
 
-**Step 1, assemble the queue.** Read `<voiceprint_home>/lessons.md`. Then scan the current session's conversation for any approvals voiceprint may have missed logging at the time. For each session-recovered approval not already in `lessons.md` (dedupe by timestamp + first 80 characters of the final approved draft), append a structured entry to `lessons.md` so it is persisted.
+   Pattern 3 — voice-profile.md
+   "'Shape of it' over 'structure of it'."
 
-After the queue is assembled, transparently tell the user when items came from the current conversation, communicate that a few entries were noticed live in this session, alongside the ones already on the queue from past sessions. Phrasing is voiceprint's call. The point is honesty about provenance, not a status report.
+   What do you think? Anything to refine, push back on, or add?
+   Ask me about any pattern if you want to see what triggered it.
+   ```
 
-Everything goes into a single review queue. Approvals missed in past sessions are unrecoverable, the conversation is gone, and that is the accepted cost of being plugin-free and hook-free.
+4. **Open dialogue.** User can say "show me what triggered pattern 1", "that's more register-specific than cross-register", "rephrase pattern 3", or flag a pattern as wrong. Voiceprint responds, surfaces lesson chunks when asked or needed for clarity, adjusts, surfaces glaring contradictions if any emerge.
 
-**Step 2, extract patterns at review time.** For each entry, read the three captured pieces (You asked, Final approved version, Changes you made) and ask: *what is distinctive about this approved draft compared to the current voice profile, given the user's ask and any edits they made?* Pattern extraction works from the captured material. The captured diff is usually the strongest signal, what the user actively reshaped points directly at a voice rule.
+5. **Confirm before writing.** When the user looks satisfied (after one or more refinement rounds, or straight away), voiceprint asks an explicit confirm prompt:
 
-**Step 3, present each candidate one at a time.** Each card includes five elements:
+   ```
+   Ready for me to write these to your voice profile?
 
-1. **Position in the queue**, e.g. "1 of 5".
-2. **The original prompt**, the date and what the user asked for.
-3. **The approved draft**, show in full inline, or if the draft is too long to read comfortably in the card, tell the user exactly where to find it: the resolved `<voiceprint_home>/lessons.md` path and the entry heading (e.g. `## 2026-05-01T12:00, ad-copy`). Never silently excerpt.
-4. **The diff**, what the user changed from voiceprint's draft (or "accepted as written" if they did not).
-5. **The pattern voiceprint extracted**, what voiceprint noticed about the user's voice from this entry, plus the proposed destination (a specific register file, the cross-register user-additions area in voice-profile.md, or samples/).
+     [1] Yes — write them
+     [2] One more change first
+     [3] Other — specify
+   ```
 
-End each card by asking the user to choose one of four actions: always spell them out, **Approve**, **Reject**, **Edit**, **Skip**, with single-letter shortcuts in parentheses: e.g. "Approve (A) / Reject (R) / Edit (E) / Skip (S)". Never show letters alone without the word, A/R/E/S on its own is opaque. Layout, separators, and surrounding phrasing are voiceprint's call.
+   Voiceprint **does not infer satisfaction from silence**. The user must affirmatively pick `[1]` (or say something equivalent — "yes", "go ahead", "write them") before any write happens. If `[2]`, go back to step 3 with the latest state.
 
-**Step 4, apply each action.**
+6. Populator distributes the agreed-upon patterns across `voice-profile.md` and matching `registers/<name>.md` files. Same dedupe and glaring-contradiction checks as setup.
 
-- **Approved.** Write the pattern wherever it best fits **inside the existing user data layout**, decided at the moment of approval based on what the pattern is. Possible destinations:
-  - The matching register file at `<voiceprint_home>/registers/<name>.md` (most common, register-specific rules).
-  - The cross-register user-additions area in `<voiceprint_home>/voice-profile.md` (rules that apply across every register).
-  - `<voiceprint_home>/samples/` as a new exemplar file (when what is captured is more an artifact-as-reference than a stateable rule).
-  
-  Stay within the declared structure (`voice-profile.md`, `lessons.md`, `samples/`, `registers/`). No inventing new top-level files or folders. Remove the entry from `lessons.md` after writing.
-- **Rejected.** Remove the entry from `lessons.md`. **No separate rejected file.** If the same pattern resurfaces in a future review, that is the signal the original rejection was wrong, the pattern IS the user's voice. Don't suppress it permanently.
-- **Edited.** The user edits the **pattern description** voiceprint proposed (rewording "opens with quiet observation under 15 words" into something that better captures their voice rule). The captured draft text and destination logic are unchanged, write the user-edited pattern to the same place an Approved pattern would go. Remove the entry from `lessons.md`.
-- **Skipped.** Leave the entry in `lessons.md` for the next review.
+7. **Clear processed entries from `lessons.md`.** Counter resets to 0.
 
-**Step 5, closing message.** Print a one-line confirmation that reflects the current setting, so the user always sees the system is alive and behaving as they configured it.
+8. Show transparency summary in the same shape as setup:
 
-- **If `review_threshold > 0` (auto mode):** confirm the review is complete and that another check-in will come once N more patterns have been captured (use the actual threshold value, never a hardcoded number, use the word "patterns" in the user-facing message). Then tell the user to open a new session for the updated patterns to take effect. Phrasing is voiceprint's call.
-- **If `review_threshold == 0` (manual mode):** confirm the review is complete, voiceprint will not check in on its own, the user can run a review on demand by saying "voiceprint review" (or similar), and the user can re-enable auto-prompts any time by giving voiceprint a number. Then tell the user to open a new session for the updated patterns to take effect. Phrasing is voiceprint's call.
+   ```
+   Done. Wrote the patterns we discussed:
 
-This design means **pattern extraction happens once, at review time, when accuracy matters**. Capture stores raw material; the analytical work happens when the user is paying attention to the result.
+   voice-profile.md (+3 entries)
+     - Land the point and stop
+     - "Shape of it" over "structure of it"
+     - ...
+
+   registers/social-posts.md (+1 entry)
+
+   lessons.md cleared. Next review at +N drafts.
+
+   Edit any file by hand if anything looks off.
+   Open a new session for changes to take effect.
+   ```
+
+If no patterns emerge clearly, voiceprint says so plainly in step 3 and asks:
+
+```
+I've reviewed the last N drafts. Nothing's clear enough yet to
+extract as a rule — your voice on these reads consistent with
+what's already in voice-profile.md.
+
+  [1] Clear lessons.md and reset counter
+  [2] Hold lessons for next review — counter continues
+  [3] Other — specify
+```
+
+The summary is a checkpoint, not a wall. Same as setup — after the summary, the user can still challenge any entry, voiceprint edits files in real-time.
+
+**End-of-review reminder:** tell the user to open a new session for the new patterns to take effect (in-context copies are stale until reload).
 
 ## Capture reliability and failure mode
 
