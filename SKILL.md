@@ -173,6 +173,8 @@ Set up your voice profile?
 
 Triggered when the user says "voiceprint setup" or anything voiceprint reads as that intent ("set up voiceprint", "configure voiceprint", "let's get voiceprint going"). Same flow runs from the auto-prompt's `[1]` branch (see *Permission question* above).
 
+Also triggered directly by "import voice doc" (goes straight to Path B, bypassing the path-pick prompt) or "analyse my samples" (goes straight to Path A). Same intent-judgement applies — phrases like "import my writing", "use my samples", "read my samples", or anything voiceprint reads as that intent route the same way.
+
 After the path question (see *Permission question* above) the flow forks into Path B (voice doc) or Path A (samples). Both end with the **intelligent populator + transparency summary** described later in this doc.
 
 ### Path B — voice doc intake
