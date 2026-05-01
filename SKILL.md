@@ -1,23 +1,26 @@
 ---
 name: voiceprint
-description: Apply the user's writing voice to drafts. Triggers on writing requests AND on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code, edits/proofreads of user-supplied text, or scheduling/publishing requests (→ social-media-manager).
+description: Apply the user's writing voice to any public-facing output. Triggers whenever the output is intended for an external audience (clients, followers, readers, anyone outside the user themselves), AND on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code, edits/proofreads of user-supplied text, or private internal notes.
 ---
 
 # voiceprint
 
-Voiceprint applies the user's writing voice to anything they might publish. It strips AI tells by default and learns the user's actual voice over time, with their approval. Pure markdown plus Claude's built-in file tools — no plugin runtime, no hooks, no shell scripts, no network calls.
+Voiceprint applies the user's writing voice to any output intended for an external audience. It strips AI tells by default and learns the user's actual voice over time, with their approval. Pure markdown plus Claude's built-in file tools — no plugin runtime, no hooks, no shell scripts, no network calls.
 
 ## When to activate
 
-Activate whenever the output is text the user might publish in their voice. Concrete triggering paths:
+Activate whenever the output is intended for an external audience — clients, prospects, followers, readers, or anyone outside the user themselves. This includes social posts, emails, newsletters, blog articles, ad copy, bios, announcements, proposals, pitches, and any other text the user will put in front of another person.
 
-- **Implicit (writing-task verb + publishable output):** "draft me a LinkedIn post", "summarise this article for my newsletter", "3 takeaways for my Substack", "write the cold email", "give me a hook for the ad", "rewrite this in my voice", "turn these notes into a blog draft".
+Concrete triggering paths:
+
+- **Public-facing output (default):** any draft, copy, or message destined for clients or an audience — regardless of whether a writing-task verb was used. The question is not "did they ask me to write something?" but "will someone outside the user read this?" If yes, voiceprint runs.
 - **Explicit (skill name as keyword):** any prompt mentioning "voiceprint" — "voiceprint this Substack draft", "set up voiceprint", "voiceprint review", "move voiceprint to …".
 
 Do NOT activate when:
 
 1. **The output is code.** Refactoring, debugging, generating functions, writing tests, technical commentary on a codebase. Voice is irrelevant to code.
 2. **The request is an edit or proofread on user-supplied text.** "Proofread my draft", "tighten this paragraph I wrote", "fix the typos in this email" — the user's voice is already present in the text. Touching it with voiceprint risks overwriting them with the model's interpretation of "their voice".
+3. **The output is private and internal.** Notes to self, internal planning docs, personal journal entries — anything the user is not putting in front of another person.
 
 Also stay out for any specific request where the user signals they want raw output. Seeded examples: "neutral summary", "just the facts", "no voice", "raw", "plain", "no styling". Judge intent — if the user asks for an objective summary or a bulleted brief with no voice, deliver that.
 

@@ -18,7 +18,7 @@ Paste this into Claude Code:
 
     Add this skill to my system.
 
-Claude fetches the skill into `~/.claude/skills/voiceprint/`. That's it. The skill auto-activates the next time you ask Claude to write something.
+Claude fetches the skill into `~/.claude/skills/voiceprint/`. That's it. The skill auto-activates whenever Claude produces output intended for an external audience.
 
 ### Option B — CLI
 
@@ -70,7 +70,7 @@ Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the sk
 ## What it does NOT do
 
 - Doesn't send any data anywhere. Everything is local.
-- Doesn't activate on code, or on edits/proofreads of text you wrote (your voice is already in it).
+- Doesn't activate on code, edits/proofreads of text you wrote (your voice is already in it), or private internal notes.
 - Doesn't try to replace your voice — it learns *with* you, not without you.
 
 ## License
