@@ -1,6 +1,6 @@
 ---
 name: voiceprint
-description: Apply the user's writing voice to any public-facing output. Triggers whenever the output is intended for an external audience (clients, followers, readers, anyone outside the user themselves), AND on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code, edits/proofreads of user-supplied text, or private internal notes.
+description: Apply the user's writing voice to any output destined for an external audience (clients, followers, readers, anyone outside the user themselves), including polishing or tightening a draft the user pasted. Also triggers on any prompt mentioning "voiceprint". Strips AI tells, learns the user's voice over time. Stacks with other skills (brand context, frameworks) — loads on top, not instead of them. Does NOT trigger on code or private internal notes.
 ---
 
 # voiceprint
@@ -19,8 +19,9 @@ Concrete triggering paths:
 Do NOT activate when:
 
 1. **The output is code.** Refactoring, debugging, generating functions, writing tests, technical commentary on a codebase. Voice is irrelevant to code.
-2. **The request is an edit or proofread on user-supplied text.** "Proofread my draft", "tighten this paragraph I wrote", "fix the typos in this email" — the user's voice is already present in the text. Touching it with voiceprint risks overwriting them with the model's interpretation of "their voice".
-3. **The output is private and internal.** Notes to self, internal planning docs, personal journal entries — anything the user is not putting in front of another person.
+2. **The output is private and internal.** Notes to self, internal planning docs, personal journal entries — anything the user is not putting in front of another person.
+
+Edits and proofreads of user-supplied text **do** activate voiceprint when the text is destined for an external audience (tightening a LinkedIn draft, polishing a client email, fixing typos in a newsletter). Voiceprint applies the humanizer floor and the voice profile to whatever the model touches, while preserving the user's existing prose where it already sounds like them. The user's pasted draft becomes the baseline for *First draft tracking* below — any edits voiceprint makes are the diff captured at approval time.
 
 Also stay out for any specific request where the user signals they want raw output. Seeded examples: "neutral summary", "just the facts", "no voice", "raw", "plain", "no styling". Judge intent — if the user asks for an objective summary or a bulleted brief with no voice, deliver that.
 
@@ -57,11 +58,15 @@ The pointer file is never bundled inside the skill folder. Skill updates (which 
 
 ## How to apply voice
 
-Voice is layered, applied from broadest floor to narrowest tweak. Every draft loads all three layers in order:
+Voice is layered, applied from broadest floor to narrowest tweak. Three layers, loaded in order:
 
-1. **Humanizer floor.** Load `references/humanizer.md` from the skill folder. These rules strip AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth, hedging, predictable openers). The humanizer is the floor every draft sits on, regardless of register. Loaded fresh from the skill repo on every activation — never duplicated into `<voiceprint_home>/profile.md`. This way, humanizer updates reach existing users automatically the moment they update the skill.
+1. **Humanizer floor.** Load `references/humanizer.md` from the skill folder. These rules strip AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth, hedging, predictable openers). The humanizer is the floor every draft sits on, regardless of register. Lives in the skill repo, never duplicated into `<voiceprint_home>/profile.md`, so humanizer updates reach existing users automatically the moment they update the skill.
 2. **User additions.** Load `<voiceprint_home>/profile.md`. The frontmatter has settings; the body holds cross-register voice rules the user has approved during reviews ("I open with a quiet observation", "I avoid corporate verbs", "I close with a question, not a CTA"). These layer on top of the humanizer floor and apply to every register.
 3. **Matching register.** Resolve the register filename from the request (see *Register decoder* below). If `<voiceprint_home>/registers/<name>.md` exists, load it. If not, create it lazily by copying `references/register-template.md` and continue with the empty scaffold — the next draft for this register will fill it in over time.
+
+**Loading rule.** Read each layer the first time it's needed in a session, then rely on what's already in context for subsequent drafts. Don't re-Read files that have already been loaded this session — the content is already there, and re-reading just burns tokens without changing anything. The matching register may be different from one draft to the next; load each new register the first time it's needed, then keep using the in-context copy for further drafts in that register.
+
+This is also why the review flow tells the user to open a new session for newly-approved patterns to take effect: the on-disk `profile.md` and register files have changed, but the in-context copies are stale until a fresh session reloads them.
 
 Generate the draft applying these three layers, narrowest layer winning when they conflict. The humanizer never overrides a user-approved rule; a user-approved cross-register rule never overrides a register-specific note. Layered, not averaged.
 
@@ -97,7 +102,7 @@ The first time voiceprint activates on a machine where the data folder does not 
 
 1. Resolve voiceprint home as described above. On a fresh install with no pointer file, this resolves to `~/Documents/Voiceprint/`.
 2. Create the home folder.
-3. Copy `references/profile-template.md` from the skill folder to `<voiceprint_home>/profile.md`. Set `created` and `last_review` in the frontmatter to today's date.
+3. Copy `references/profile-template.md` from the skill folder to `<voiceprint_home>/profile.md`. No frontmatter values need editing — the template ships with the right defaults.
 4. Create `~/.claude/voiceprint/` if it does not exist, and write the resolved absolute path of the home folder into `~/.claude/voiceprint/voiceprint_home.txt`.
 5. Print a one-time announcement at the end of the current response. The announcement should communicate, in voiceprint's own warm and direct phrasing:
    - Where the profile was created (using the actual resolved path, not a placeholder).
@@ -132,6 +137,8 @@ Each pasted sample is saved to `<voiceprint_home>/samples/sample-N.md` (auto-inc
 > What do you mainly write? (e.g. LinkedIn posts, client emails, blog drafts) — or type **skip**.
 
 Each kind named is run through the register decoder (Step 1 first, Step 2 fallback) to produce a canonical filename. For each filename that does not already exist, copy `references/register-template.md` to `<voiceprint_home>/registers/<filename>` so future lessons have somewhere to land. Existing register files are left alone.
+
+After the files are created, name them back to the user in one short line, including which inputs map to each file when the decoder collapsed several inputs into one register. Example: if the user said "LinkedIn posts, Twitter posts, and client emails", reply with something like "Created `social-posts.md` (covers LinkedIn and Twitter) and `client-comms.md` (for client emails)." This stops the user from wondering where their Twitter file went. Phrasing is voiceprint's call.
 
 Setup is **idempotent**. Re-running it adds samples (continuing the N counter) and adds registers (only creating files that do not already exist). Nothing is wiped, nothing is overwritten.
 
@@ -253,9 +260,7 @@ End each card by asking the user to choose one of four actions: always spell the
 - **Edited.** The user edits the **pattern description** voiceprint proposed (rewording "opens with quiet observation under 15 words" into something that better captures their voice rule). The captured draft text and destination logic are unchanged — write the user-edited pattern to the same place an Approved pattern would go. Remove the entry from `lessons.md`.
 - **Skipped.** Leave the entry in `lessons.md` for the next review.
 
-**Step 5 — update `last_review`** in `profile.md` frontmatter to today's date.
-
-**Step 6 — closing message.** Print a one-line confirmation that reflects the current setting, so the user always sees the system is alive and behaving as they configured it.
+**Step 5 — closing message.** Print a one-line confirmation that reflects the current setting, so the user always sees the system is alive and behaving as they configured it.
 
 - **If `review_threshold > 0` (auto mode):** confirm the review is complete and that another check-in will come once N more patterns have been captured (use the actual threshold value, never a hardcoded number — use the word "patterns" in the user-facing message). Then tell the user to open a new session for the updated patterns to take effect. Phrasing is voiceprint's call.
 - **If `review_threshold == 0` (manual mode):** confirm the review is complete, voiceprint will not check in on its own, the user can run a review on demand by saying "voiceprint review" (or similar), and the user can re-enable auto-prompts any time by giving voiceprint a number. Then tell the user to open a new session for the updated patterns to take effect. Phrasing is voiceprint's call.

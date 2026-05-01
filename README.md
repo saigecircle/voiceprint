@@ -70,7 +70,7 @@ Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the sk
 ## What it does NOT do
 
 - Doesn't send any data anywhere. Everything is local.
-- Doesn't activate on code, edits/proofreads of text you wrote (your voice is already in it), or private internal notes.
+- Doesn't activate on code or private internal notes.
 - Doesn't try to replace your voice — it learns *with* you, not without you.
 
 ## License
