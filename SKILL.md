@@ -318,6 +318,44 @@ After the path question (see *Permission question* above) the flow forks into Pa
 
 10. Frontmatter updated to `setup_complete: true, setup_method: samples, last_setup_run: <today>`.
 
+## Intelligent populator
+
+After Path B's voice-doc analyser or Path A's pattern analyser produces proposed entries, the populator distributes them across the right destinations and writes them directly. **No per-item approval gate.**
+
+- Cross-register observations → `voice-profile.md`
+- Register-specific observations → matching `registers/<name>.md` (created lazily by copying `references/register-template.md` if the file doesn't exist)
+- Cleaned samples (Path A only) → `samples/<YYYY-MM-DD>-<n>.md`
+
+**Output cap: 5–10 high-signal additions total per analysis run**, across all destinations combined. Not per-destination. Distill, never bulk-copy.
+
+### Dedupe rule
+
+Before writing each proposed entry, voiceprint compares its **canonical headline** against the canonical headlines of existing entries in the destination file.
+
+**Canonical headline** = first sentence (or sentence-fragment up to the first period or newline) of the entry, lowercased, with all punctuation stripped. Comparison is exact-string after canonicalisation. Not semantic.
+
+Example:
+- Existing entry: `**Borrowed authority.** Reference a well-known figure...` → canonical = `borrowed authority`
+- New proposed entry: `**Borrowed authority** — using a well-known figure...` → canonical = `borrowed authority`
+- Match → skip.
+
+This is a deterministic rule. Re-runs with the same input produce the same dedupe outcome.
+
+### Glaring contradictions
+
+Before writing, the populator checks for *direct opposites* between proposed entries and existing entries. Bar is high — voice is art. Only flag when a proposed rule and an existing rule cannot both be true at the same time.
+
+- **Counts as glaring:** "Always use em dashes" vs "Never use em dashes"; "Open with a question" vs "Never open with a question"; "Aussie spelling throughout" vs "American spelling throughout".
+- **Does NOT count as glaring:** "Use contractions by default" vs "Sometimes formal phrasing fits" (compatible — contextual); "Open with a scene" vs "Open with a plain statement of the thing I'm challenging" (compatible — different opening modes); different rules in different register files (compatible — registers are register-scoped).
+
+When a glaring contradiction is detected, voiceprint **writes both entries** (default behaviour: voice is contextual, both can be true) and surfaces a one-line note inside the transparency summary. No blocking prompt. The user can resolve via co-creation if they want.
+
+### Idempotency and additivity
+
+- **Idempotent:** re-running with the same voice doc or the same samples produces no new entries the second time (canonical-headline dedupe ensures this for `voice-profile.md` and register files).
+- **Sample files (Path A only) are NOT deduped** — each run saves new sample files with new `<n>` suffixes. Sample files are a record of what the user supplied, not a deduplicated set.
+- **Additive across paths:** a user can run Path A first, Path B later (or any combination). Populator merges into the same destinations. Order doesn't matter.
+
 ## Approval logging (per-turn rule)
 
 When the user signals approval of a draft voiceprint generated, append a structured entry to `<voiceprint_home>/lessons.md`. Capture time stores enough raw material that a review weeks later still makes sense, the original conversation will be long gone by then.
