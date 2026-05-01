@@ -47,7 +47,7 @@ It's all plain markdown. Read it, edit it, sync it.
 - **Setup (optional):** say *"voiceprint setup"* for two questions — paste a few samples, name the kinds of writing you do. Each is independently skippable.
 - **Day one:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
 - **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
-- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to look at what it's noticed. Say yes, walk the queue, choose what to keep. Adjust the cadence any time — *"make it 3"*, *"every 10 instead"* — or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
+- **Review:** after every 5 approved drafts, voiceprint asks if you're ready to look at what it's noticed. Say yes, walk the queue, choose what to keep. Approved patterns sharpen your voice for everything you write from that point on. Adjust the cadence any time — *"make it 3"*, *"every 10 instead"* — or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
 
 ## Want a `/voiceprint` shortcut?
 
