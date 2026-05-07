@@ -16,7 +16,7 @@ Voiceprint applies the user's writing voice to any output intended for another h
 | Audience-facing draft, message, or copy (social, email, newsletter, blog, ad, bio, announcement, proposal, pitch, Slack, internal memo, etc.) | Yes |
 | Inline chat reply the user might copy out into another channel | Yes |
 | Edit or proofread of audience-facing text | Yes — preserve user's existing prose, apply layers to whatever the model touches |
-| Prompt mentions "voiceprint" in any phrasing ("voiceprint this", "voiceprint review", "move voiceprint to …") | Yes — explicit invocation overrides all carve-outs |
+| Prompt mentions "voiceprint" in any phrasing ("voiceprint this", "voiceprint review", "voiceprint setup") | Yes — explicit invocation overrides all carve-outs |
 | Code, terminal output, technical commentary on a codebase | No |
 | Notes-to-self, scratchpads, private journal, personal planning docs | No |
 | User asks for raw output ("just the facts", "no voice", "raw", "plain", "neutral summary", "no styling") | No — deliver as asked |
@@ -33,53 +33,48 @@ For edits and proofreads, the user's pasted draft is the baseline for *First dra
 
 Once voiceprint is activated, whether the user is asking for a fresh draft or handing over their own text to polish, the response order is fixed:
 
-1. **Load any layers not yet in this session.** Read `references/humanizer.md`, `<voiceprint_home>/voice-profile.md`, and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context, see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
+1. **Load any layers not yet in this session.** Read `<voiceprint_home>/voice-profile.md` (which contains the user's voice rules and the inlined Floor) and the matching register file (per *Register decoder* below) the first time each is needed in this session. Skip any that are already in context, see *How to apply voice* below for the loading rule. Do not skip a layer because the text is short, casual, or looks like a personal note: **explicit invocation of voiceprint overrides the user-only carve-out** in *When to activate*.
 2. **Onboarding gate.** After loading `voice-profile.md`, if `setup_complete: false`, run the *Permission question* (below). It is the entire response for that turn — do not draft, polish, or apply layers. Resume from the user's reply per the branching rules in that section. Do not re-ask within the same session.
-3. **Run the content through the loaded layers.** Strip humanizer-banned shapes, apply user-additions from `voice-profile.md`, apply register notes. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
+3. **Run the content through the loaded layers.** Apply the Floor (banned shapes, vocabulary, default tone) and user additions from `voice-profile.md`, then apply register notes if a register loaded. If the user supplied a draft, treat it as the baseline and preserve the parts that already sound like them.
 4. **Then write the response.** Briefly name which layers were loaded (or already in context), so the user can see voice was actually applied rather than the model writing from memory.
 
 If a layer file is missing or unreadable, surface that before responding, never silently skip a layer.
 
 ## Path resolution
 
-Voiceprint stores user data in a folder it owns. The folder location is recorded in a single tiny pointer file at `~/.claude/voiceprint/voiceprint_home.txt`, which lives **adjacent to** the skill folder, not inside it. There are no environment variables; the pointer file is the only source of truth.
+Voiceprint is project-scoped. User data lives in `.claude/voiceprint/` inside the project the user is currently working in. There is no global pointer, no environment variable, and no central registry. One project, one voice.
 
 **Resolution rule:**
 
 ```
-voiceprint_home =
-  contents of ~/.claude/voiceprint/voiceprint_home.txt   if the pointer exists
-  else ~/Documents/Voiceprint/                           (first-run default)
+voiceprint_home = walk up from cwd looking for the first .claude/voiceprint/ folder.
+                  If found, that folder IS voiceprint_home.
+                  If none found before /, treat as new project (see First run).
 ```
 
 Throughout this document, `<voiceprint_home>` is shorthand for the resolved path.
 
-**On first run** (the pointer file does not exist): create `~/Documents/Voiceprint/`, then create the parent directory `~/.claude/voiceprint/` and write the resolved absolute path into `~/.claude/voiceprint/voiceprint_home.txt`. Subsequent activations read the pointer file and use whatever path it contains.
+**On every activation:** walk up from the current working directory. Stop at the first ancestor containing a `.claude/voiceprint/` folder; that folder is the data home for this session. Use it for reads and writes. If the folder is unreadable or unwritable (sync conflict, permission issue), stop and surface a clear repair message naming the file, the path, and likely causes. Do not silently fall back to working without saving.
 
-**On every activation:** read the pointer first. If it exists but the path it points to is no longer writable (folder deleted, permission issue, sync conflict on a parent), stop and surface a clear repair message naming the file, the path, and likely causes (sync conflict, permissions, manual delete). Do not silently fall back to working without saving, the user always needs to know when voiceprint cannot persist.
-
-**Relocation flow.** When the user says "move voiceprint to <new path>" (or anything Claude reads as that intent, "put voiceprint in my Obsidian vault", "relocate the voiceprint folder to Dropbox"), voiceprint:
-
-1. Creates the new folder if it does not exist.
-2. Moves the existing data (voice-profile.md, lessons.md, samples/, registers/) into it.
-3. Rewrites `~/.claude/voiceprint/voiceprint_home.txt` with the new absolute path.
-4. Uses the new path immediately in the same session, no restart needed.
-
-The pointer file is never bundled inside the skill folder. Skill updates (which replace `~/.claude/skills/voiceprint/`) do not touch it, so the user's chosen location survives every update.
+**Why project-scoped:** different projects can have different voices. A SoulCopy client brain holds the client's voice. Andrew's vault holds Andrew's voice. A separate Saige Circle project, if voice diverges enough to need it, holds Saige Circle's voice. Each lives in its own `.claude/voiceprint/` and is loaded only when working inside that project. No switching logic, no global state, no risk of the wrong voice loading.
 
 ## How to apply voice
 
-Voice is layered, applied from broadest floor to narrowest tweak. Three layers, loaded in order:
+Voice is layered. **One file is loaded for the layered context: `voice-profile.md`.** It contains both the user's voice rules and the inlined Floor. A second file — the matching register — loads only if it exists. Two file reads max (often one).
 
-1. **Humanizer floor.** Load `references/humanizer.md` from the skill folder. These rules strip AI tells (em dashes, "It's not just X, it's Y", banned vocabulary, generic warmth, hedging, predictable openers). The humanizer is the floor every draft sits on, regardless of register. Lives in the skill repo, never duplicated into `<voiceprint_home>/voice-profile.md`, so humanizer updates reach existing users automatically the moment they update the skill.
-2. **User additions.** Load `<voiceprint_home>/voice-profile.md`. The frontmatter has settings; the body holds cross-register voice rules the user has approved during reviews ("I open with a quiet observation", "I avoid corporate verbs", "I close with a question, not a CTA"). These layer on top of the humanizer floor and apply to every register.
-3. **Matching register.** Resolve the register filename from the request (see *Register decoder* below). If `<voiceprint_home>/registers/<name>.md` exists, load it. If not, create it lazily by copying `references/register-template.md` and continue with the empty scaffold, the next draft for this register will fill it in over time.
+The conceptual layers are:
 
-**Loading rule.** Read each layer the first time it's needed in a session, then rely on what's already in context for subsequent drafts. Don't re-Read files that have already been loaded this session, the content is already there, and re-reading just burns tokens without changing anything. The matching register may be different from one draft to the next; load each new register the first time it's needed, then keep using the in-context copy for further drafts in that register.
+1. **Floor (sacred).** Lives in `voice-profile.md` under the `## Floor` section. Strips AI tells (em dashes, banned vocabulary, banned sentence shapes, default tone). Manual edit only — capture never logs Floor changes, review never proposes them. Updated by the user when a global rule needs to change, or via explicit `voiceprint refresh-floor` to merge upstream Floor evolutions.
+2. **User voice rules.** The other sections of `voice-profile.md` (*Voice in a sentence*, *Cross-register notes*, *Things to avoid*, *Voice anchors*). These are the user's own additions, populated at setup and during reviews. They layer on top of the Floor and apply across every register.
+3. **Matching register (only if earned).** Resolve the register filename from the request (see *Register decoder* below). If `<voiceprint_home>/registers/<name>.md` exists, load it. If not, **do not create an empty stub.** Use only the profile + Floor. The register file appears later, when review proposes promoting accumulated patterns into one.
 
-This is also why the review flow tells the user to open a new session for newly-approved patterns to take effect: the on-disk `voice-profile.md` and register files have changed, but the in-context copies are stale until a fresh session reloads them.
+**Loading rule.** Read each file the first time it's needed in a session, then rely on what's already in context for subsequent drafts. Don't re-Read files that have already been loaded this session — the content is already there, and re-reading just burns tokens. The matching register may be different from one draft to the next; load each new register the first time it's needed.
 
-Generate the draft applying these three layers, narrowest layer winning when they conflict. The humanizer never overrides a user-approved rule; a user-approved cross-register rule never overrides a register-specific note. Layered, not averaged.
+This is also why the review flow tells the user to open a new session for newly-approved patterns to take effect: the on-disk files have changed, but the in-context copies are stale until a fresh session reloads them.
+
+Generate the draft applying the three layers, narrowest winning when they conflict. The Floor never overrides a user-approved rule that explicitly says otherwise (e.g. "I do use em dashes — keep them" in *Things to avoid* would be a Floor override marker). A user-approved cross-register rule never overrides a register-specific note. Layered, not averaged.
+
+**Why the Floor is inlined.** Voiceprint activates frequently. Loading a separate humanizer file on every draft adds latency. Inlining keeps activation fast and gives the user direct edit access — the Floor is theirs, not the skill's.
 
 ## Register decoder
 
@@ -109,27 +104,28 @@ If the user's phrase is genuinely ambiguous between two decoder rows ("a LinkedI
 
 ## First run
 
-The first time voiceprint activates on a machine where the data folder does not yet exist:
+The first time voiceprint activates in a project where no `.claude/voiceprint/` folder exists in any ancestor of cwd:
 
-1. Resolve voiceprint home as described above. On a fresh install with no pointer file, this resolves to `~/Documents/Voiceprint/`.
-2. Create the home folder.
-3. Copy `references/voice-profile-template.md` from the skill folder to `<voiceprint_home>/voice-profile.md`. The template ships with `setup_complete: false`, so the next activation will trigger the permission question.
-4. Create `~/.claude/voiceprint/` if it does not exist, and write the resolved absolute path of the home folder into `~/.claude/voiceprint/voiceprint_home.txt`.
-5. Print a one-time announcement at the end of the current response. The announcement should communicate, in voiceprint's own warm and direct phrasing:
-   - Where the profile was created (using the actual resolved path, not a placeholder).
-   - That the folder can be moved any time by telling voiceprint where to put it.
+1. Determine the project root. If cwd or any ancestor contains a `.claude/` folder, that ancestor is the project root. Otherwise, treat cwd as the project root.
+2. Create `<project-root>/.claude/voiceprint/`.
+3. Copy `references/voice-profile-template.md` from the skill folder to `<project-root>/.claude/voiceprint/voice-profile.md`. The template ships with `setup_complete: false`, so the next activation will trigger the permission question. The template includes the canonical Floor inlined.
+4. Print a one-time announcement at the end of the current response. The announcement should communicate, in voiceprint's own warm and direct phrasing:
+   - Where the profile was created (using the actual resolved path).
+   - That voiceprint is now project-scoped — different projects can have different voices, each in their own `.claude/voiceprint/` folder.
 
 After the first run, the data layout under `<voiceprint_home>/` is:
 
 ```
-<voiceprint_home>/
-├── voice-profile.md   # core voice, frontmatter + cross-register user additions
+<project-root>/.claude/voiceprint/
+├── voice-profile.md   # core voice (Floor inlined) + user additions
 ├── lessons.md         # rolling capture log of approved drafts (created lazily)
 ├── samples/           # cleaned writing samples saved at setup (created lazily)
-└── registers/         # one file per register, created lazily
+└── registers/         # one file per earned register (no empty stubs)
 ```
 
-`lessons.md`, `samples/`, and `registers/` are created only when first needed. No empty scaffolding.
+`lessons.md`, `samples/`, and `registers/` are created only when first needed. No empty scaffolding. Register files are created only when explicitly promoted (see *Register decoder* and *Review flow*).
+
+**Migration from v0.7.x.** v0.7.x stored data at a path recorded in `~/.claude/voiceprint/voiceprint_home.txt`. v0.8 ignores that pointer file. If you used v0.7.x and your data lives outside any `.claude/voiceprint/` ancestor of your project, move it into `<project-root>/.claude/voiceprint/` (and then delete the orphaned `~/.claude/voiceprint/` folder).
 
 ## Permission question (onboarding gate)
 
@@ -317,9 +313,9 @@ After Path B's voice-doc analyser or Path A's pattern analyser produces proposed
 - `voice-profile.md` — every entry must land in one of these four sections:
   - **Voice in a sentence** — the north-star line, one or two sentences capturing the user's voice at its best (1 entry max per run)
   - **Cross-register notes** — voice rules that apply across every register
-  - **Things to avoid** — user-specific bans (vocabulary, phrasings, tactics) on top of the humanizer floor
+  - **Things to avoid** — user-specific bans (vocabulary, phrasings, tactics) on top of the Floor
   - **Voice anchors** — recurring phrases, characteristic one-liners, signature expressions the user reaches for
-- `registers/<name>.md` — register-specific notes (openers, closings, length, rhythm, etc.). Filename resolved via the *Register decoder*. Created lazily by copying `references/register-template.md` if the file doesn't exist.
+- `registers/<name>.md` — register-specific notes (openers, closings, length, rhythm, etc.). Filename resolved via the *Register decoder*. Created lazily by copying `references/register-template.md` *only when there is approved content to write into it*. Empty register files are never created — registers exist only when earned.
 - `samples/<YYYY-MM-DD>-<slug>.md` — cleaned samples (Path A only). Slug is 2–4 lowercase hyphenated words distilled from content (hook, theme, signature phrase, addressee).
 
 **Output caps per section** (rough guides; quality over volume, distill never bulk-copy):

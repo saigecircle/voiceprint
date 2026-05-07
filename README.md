@@ -30,25 +30,27 @@ For users who prefer the command line.
 
 ## Where your voice lives
 
-`~/Documents/Voiceprint/` by default. You can move it anywhere, your Obsidian vault, Dropbox, iCloud, by telling voiceprint where to put it. Voiceprint moves the folder and remembers the new location automatically.
+Voiceprint is **project-scoped** as of v0.8. Your voice lives in a `.claude/voiceprint/` folder inside the project you're working in:
 
 ```
-~/Documents/Voiceprint/
-├── voice-profile.md ← your core voice (cross-register rules)
-├── lessons.md     ← rolling capture log of approved drafts
-├── samples/       ← raw writing samples from setup
-└── registers/     ← per-context voice notes (social, email, blog, etc.)
+<your-project>/.claude/voiceprint/
+├── voice-profile.md ← your core voice (Floor inlined + cross-register rules)
+├── lessons.md      ← rolling capture log of approved drafts
+├── samples/        ← raw writing samples from setup
+└── registers/      ← per-register voice notes (only earned ones)
 ```
+
+Different projects can have different voices — your personal vault is one project, a client brand might be another. Voiceprint walks up from the current directory looking for the nearest `.claude/voiceprint/` folder; that folder is the voice for that session.
 
 It's all plain markdown. Read it, edit it, sync it.
 
-**Backup.** Sync the folder somewhere (Dropbox, iCloud, Syncthing, git). Voiceprint does not write `.backup.md` files; sync is your backup story.
+**Backup.** Voiceprint folders sync however your project syncs (git, Dropbox, iCloud, Syncthing). Voiceprint does not write `.backup.md` files; sync is your backup story.
 
 ## How it works
 
 - **Setup (optional but recommended):** say *"voiceprint setup"* — voiceprint asks whether to import an existing voice doc or take 3–5 writing samples, then seeds your profile so day-one drafts sound like you. The flow is also offered automatically on first activation.
-- **Generate from scratch:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies humanizer rules silently. Output already feels less AI-ish.
-- **Polish what you wrote:** paste your own draft and say *"voiceprint this"*, *"polish this client email"*, *"tighten this Slack message"*, *"finesse this"*, or *"make this sound more like me"*. Voiceprint runs your text through the humanizer floor, your voice profile, and the matching register, preserving the parts that already sound like you.
+- **Generate from scratch:** ask Claude to draft a LinkedIn post, an email, a blog intro. Voiceprint applies the Floor (AI-tells stripper) silently. Output already feels less AI-ish.
+- **Polish what you wrote:** paste your own draft and say *"voiceprint this"*, *"polish this client email"*, *"tighten this Slack message"*, *"finesse this"*, or *"make this sound more like me"*. Voiceprint runs your text through the Floor, your voice profile, and the matching register if one exists, preserving the parts that already sound like you.
 - **Daily use:** type *"perfect"*, *"send it"*, *"that's it"* on outputs you like. Voiceprint quietly notes the prompt, the final draft, and any edits you made.
 - **Review:** after every 5 approved drafts, voiceprint asks *"embed the learnings into your voice profile?"* Say yes, and voiceprint shows the patterns it's seeing in plain English with a concrete example each, then asks what to do: **Update** (write them), **Ignore all** (clear and reset), or **Other** (refine, drop, move). Approved patterns sharpen your voice from that point on. You can change the review cadence any time, *"make it 3"*, *"every 10 instead"*, or go manual. In manual mode voiceprint stays quiet until you ask: *"voiceprint review"*.
 
@@ -68,7 +70,15 @@ Paste this into Claude Code:
 
     Update voiceprint to latest.
 
-Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the skill files wholesale. Your data folder (`~/Documents/Voiceprint/`) is completely separate and never touched. Skill updates always reach you with no migration step.
+Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the skill files wholesale. Your data folder (`<your-project>/.claude/voiceprint/`) is completely separate and never touched. Skill updates always reach you with no migration step.
+
+### Migrating from v0.7.x
+
+v0.7.x stored data at a path recorded in `~/.claude/voiceprint/voiceprint_home.txt`. v0.8 ignores that pointer file. To migrate:
+
+1. Move your existing `voice-profile.md`, `lessons.md`, `registers/`, and `samples/` into `<your-project>/.claude/voiceprint/`.
+2. Delete the orphaned `~/.claude/voiceprint/` folder (pointer file lived there).
+3. Open a fresh session. Voiceprint walks up from your project's cwd and finds the moved data.
 
 ## What it does NOT do
 
@@ -78,4 +88,4 @@ Claude re-fetches the repo into `~/.claude/skills/voiceprint/`, replacing the sk
 
 ## License
 
-MIT. Built by [Saige Circle](https://saigecircle.com). Humanizer rules derived from the public-domain [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) guide.
+MIT. Built by [Saige Circle](https://saigecircle.com). Floor rules derived from the public-domain [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) guide.

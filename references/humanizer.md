@@ -1,4 +1,6 @@
-# Humanizer floor
+# Humanizer floor — canonical seed
+
+> **As of v0.8, this file is no longer loaded at runtime.** It serves as the canonical seed for the `## Floor` section that ships inlined inside `references/voice-profile-template.md`. Edits to this file feed the next major Floor refresh; they do not affect users until they explicitly run `voiceprint refresh-floor` (which merges canonical Floor changes into the user's `voice-profile.md`).
 
 The humanizer rules are the floor every voiceprint draft sits on. They strip the
 patterns that make text read as AI-generated, regardless of register.

@@ -4,6 +4,15 @@ All notable changes to voiceprint, newest first.
 
 > **Release process — bump versions in lockstep.** When cutting a new release, update the version string in every file that carries one: this CHANGELOG (new heading), `references/voice-profile-template.md` frontmatter (`voiceprint_version`), and any inline references in `SKILL.md` or `README.md`. Grep for the previous version string before tagging.
 
+## alpha 0.8.0
+
+Structural release. Three architectural changes; user-facing surface largely unchanged.
+
+- **Project-scoped data location.** Voiceprint now stores user data in `<project-root>/.claude/voiceprint/`, found by walking up from the current working directory. Different projects can have different voices, no global state, no pointer file. The pointer-file mechanism (`~/.claude/voiceprint/voiceprint_home.txt`) is removed. *Migration:* move existing data into your project's `.claude/voiceprint/` folder and delete the orphaned `~/.claude/voiceprint/` folder. See README *Migrating from v0.7.x*.
+- **Floor inlined into voice-profile.md.** The humanizer rules now ship inside `voice-profile.md` as a `## Floor` section, no longer loaded from `references/humanizer.md` at runtime. Faster activation (one less file read per draft) and direct edit access — the Floor is the user's, not the skill's. `references/humanizer.md` is kept as the canonical seed for fresh inits and explicit `voiceprint refresh-floor` operations.
+- **Earned-existence registers.** Empty register stubs are no longer auto-created when a trigger keyword matches and no register file exists yet. An empty register imposes preconceptions without enough content to steer well, which actively harms drafts. Registers are now created only when there's earned content — explicitly via "make this a LinkedIn register" or via review when accumulated patterns earn promotion.
+- **Deferred to v0.8.1+:** cluster-aware nudge thresholds, 3-MCQ fresh-init path, `voiceprint refresh-floor` command. Existing auto-prompt at threshold (default 5) and Path A/Path B onboarding flows unchanged.
+
 ## alpha 0.7.3
 
 - **Sample filenames now use a content slug.** Path A saves cleaned samples to `samples/<YYYY-MM-DD>-<slug>.md` instead of `<YYYY-MM-DD>-<n>.md`. The slug is 2–4 lowercase hyphenated words distilled from the sample's content (hook, theme, signature phrase, addressee), so a folder of samples reads as a table of contents instead of a numbered pile. Same-day collisions append `-2`, `-3`, etc.
